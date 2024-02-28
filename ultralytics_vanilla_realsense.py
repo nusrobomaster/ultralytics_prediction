@@ -20,7 +20,6 @@ pipeline.start(config)
 
 if __name__ == '__main__':
     model = YOLO("yolov8n.pt")
-    cap = cv2.VideoCapture(0)
 
     num_frames_processed = 0
     last_time = start = time.time()

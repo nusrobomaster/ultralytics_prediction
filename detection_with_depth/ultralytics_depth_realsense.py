@@ -24,6 +24,8 @@ print("Depth Scale is: " , depth_scale)
 align_to = rs.stream.color
 align = rs.align(align_to)
 
+conf_threshold = 0.5
+
 if __name__ == '__main__':
     model = YOLO("yolov8n.pt")
 
@@ -53,16 +55,44 @@ if __name__ == '__main__':
             # Convert images to numpy arrays
             depth_image = np.asanyarray(depth_frame.get_data())
             color_image = np.asanyarray(color_frame.get_data())
-            color_image = model.track(color_image, imgsz=640, verbose=False)[0].plot()
             
+            # Run YOLOv8 inference
+            results = model(color_image, verbose=False)
+
+            # Get bounding box coordinates and depth
+            for det in results[0].boxes:
+                # print(det)
+                confidence = det.conf
+                if confidence > conf_threshold:
+                    # det.xyxy has the format tensor([xmin, ymin, xmax, ymax])
+                    xmin, ymin, xmax, ymax = map(int, det.xyxy[0].tolist())
+                    
+                    # Find centroid coordinates
+                    centroid_x = (xmin + xmax) // 2
+                    centroid_y = (ymin + ymax) // 2
+
+                    # Get depth information
+                    depth_value = depth_frame.get_distance(centroid_x, centroid_y)
+
+                    # Draw bounding box
+                    object_str = "cls: {}".format(det.cls[0])
+                    confidence_str = "conf: {:.2f}".format(confidence.tolist()[0])
+                    depth_str = "distance: {:.2f} meters".format(depth_value)
+                    cv2.rectangle(color_image, (xmin, ymin), (xmax, ymax), (0, 255, 0), 2)
+                    cv2.putText(color_image, str(object_str), (xmin, ymin - 50), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (36,255,12), 2)
+                    cv2.putText(color_image, confidence_str, (xmin, ymin - 30), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (36,255,12), 2)
+                    cv2.putText(color_image, depth_str, (xmin, ymin - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (36,255,12), 2)
+
+                    # Print coordinates and depth
+                    print("Object {} detected at ({}, {}) with depth: {:.2f} meters".format(object_str, centroid_x, centroid_y, depth_value))
+
             elapsed_time_lst.append(time.time() - last_time)
             # print(elapsed_time_lst[-1])
             last_time = time.time()
             
-            depth_colormap = cv2.applyColorMap(cv2.convertScaleAbs(depth_image, alpha=0.03), cv2.COLORMAP_JET)
-            images = np.hstack((color_image, depth_colormap))
-        
-            cv2.imshow('RealSense', images)
+            # Display the resulting frame
+            cv2.imshow('Object Detection', color_image)
+            
             if cv2.waitKey(1) & 0xFF == ord('q'):
                 break
 

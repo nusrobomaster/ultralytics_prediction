@@ -1,10 +1,13 @@
 import numpy as np
-import math
 
 class SpatialLocationCalculator():
-    def __init__(self, HFOV, horizontal_length, vertical_length):
+    def __init__(self, horizontal_length, vertical_length):
         self.image_width = horizontal_length
         self.image_height = vertical_length
+        # camera calibration matrix
+        self.calib_matrix = np.array([[385.144,      0., 322.311],
+                                    [      0., 385.144, 241.150],
+                                    [      0.,      0.,      1.]], dtype=np.float32)
 
         # Setting of values
         self.DELTA = 6 # defines padding around the center point of the (ROI) 
@@ -12,7 +15,8 @@ class SpatialLocationCalculator():
         self.THRESH_HIGH = 15000 # 15m
 
         # Compute distance (in pixels) from the projection center to the image center
-        self.focal_length = self.image_width / (2.0 * math.tan(HFOV / 2.0))
+        # self.focal_length = self.image_width / (2.0 * math.tan(HFOV / 2.0))
+        self.focal_length = self.calib_matrix[0, 0]
 
     def calc_location(self, roi, depthMap):
         # Take 10x10 depth pixels around center of bounding box for depth averaging
@@ -45,3 +49,8 @@ class SpatialLocationCalculator():
     def calc_distance(self, roi, depthMap):
         X, Y, Z = self.calc_location(roi, depthMap)
         return np.sqrt(X**2 + Y**2 + Z**2)
+
+    # def calc_HFOV(self):
+    #     focal_length_px = self.calib_matrix[0, 0]
+    #     HFOV_radians = 2 * math.atan(self.image_width / (2 * focal_length_px))
+    #     return HFOV_radians

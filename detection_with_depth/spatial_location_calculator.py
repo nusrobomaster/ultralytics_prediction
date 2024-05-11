@@ -17,6 +17,8 @@ class SpatialLocationCalculator():
         # Compute distance (in pixels) from the projection center to the image center
         # self.focal_length = self.image_width / (2.0 * math.tan(HFOV / 2.0))
         self.focal_length = self.calib_matrix[0, 0]
+        
+        self.scale = 1000
 
     def calc_location(self, roi, depthMap):
         # Take 10x10 depth pixels around center of bounding box for depth averaging
@@ -33,7 +35,7 @@ class SpatialLocationCalculator():
         averageDepth = np.mean(depthROI[inRange])
 
         u, v, z = cx - self.image_width // 2, cy - self.image_height // 2, self.focal_length # Spatial coordinates on image in pixels
-        f = lambda x : x * averageDepth / self.focal_length
+        f = lambda x : (x * averageDepth / self.focal_length) / self.scale
 
         return f(u), f(v), f(z)
     

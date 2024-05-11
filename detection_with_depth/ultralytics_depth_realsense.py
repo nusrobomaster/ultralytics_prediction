@@ -73,12 +73,15 @@ if __name__ == '__main__':
                     # det.xyxy has the format tensor([xmin, ymin, xmax, ymax])
                     xmin, ymin, xmax, ymax = map(int, det.xyxy[0].tolist())
                     
+                    depth_value = spatial_location_calculator.calc_location((xmin, ymin, xmax, ymax), depth_image)[2]
+                    distance = spatial_location_calculator.calc_distance((xmin, ymin, xmax, ymax), depth_image)
+                    
                     # Find centroid coordinates
                     centroid_x = (xmin + xmax) // 2
                     centroid_y = (ymin + ymax) // 2
 
-                    # Get depth information
-                    depth_value = depth_frame.get_distance(centroid_x, centroid_y)
+                    # # Get depth information
+                    # depth_value = depth_frame.get_distance(centroid_x, centroid_y)
 
                     # Draw bounding box
                     object_str = "cls: {}".format(det.cls[0])
@@ -91,6 +94,7 @@ if __name__ == '__main__':
 
                     # Print coordinates and depth
                     print("Object {} detected at ({}, {}) with depth: {:.2f} meters".format(object_str, centroid_x, centroid_y, depth_value))
+                    print("Euclidean distance away: {:.2f}".format(distance))
 
             elapsed_time_lst.append(time.time() - last_time)
             # print(elapsed_time_lst[-1])

@@ -33,7 +33,8 @@ align = rs.align(align_to)
 conf_threshold = 0.5
 
 if __name__ == '__main__':
-    model = YOLO("yolov8n.pt")
+    # model = YOLO("yolov8n.pt")
+    model = YOLO("RM_130524_11pm.pt")
 
     num_frames_processed = 0
     last_time = start = time.time()

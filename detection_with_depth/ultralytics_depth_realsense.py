@@ -74,14 +74,10 @@ if __name__ == '__main__':
                     # det.xyxy has the format tensor([xmin, ymin, xmax, ymax])
                     xmin, ymin, xmax, ymax = map(int, det.xyxy[0].tolist())
                     
-                    # Get depth information
-                    depth_value = spatial_location_calculator.calc_location((xmin, ymin, xmax, ymax), depth_image)[2]
-                    distance = spatial_location_calculator.calc_distance((xmin, ymin, xmax, ymax), depth_image)
+                    # Find centroid coordinates and depth information
+                    centroid_x, centroid_y, depth_value = spatial_location_calculator.calc_location_relative_to_camera((xmin, ymin, xmax, ymax), depth_image)
+                    distance = spatial_location_calculator.calc_distance_from_camera((xmin, ymin, xmax, ymax), depth_image)
                     
-                    # Find centroid coordinates
-                    centroid_x = spatial_location_calculator.calc_location((xmin, ymin, xmax, ymax), depth_image)[0]
-                    centroid_y = spatial_location_calculator.calc_location((xmin, ymin, xmax, ymax), depth_image)[1]
-
                     # Draw bounding box
                     object_str = "cls: {}".format(det.cls[0])
                     confidence_str = "conf: {:.2f}".format(confidence.tolist()[0])

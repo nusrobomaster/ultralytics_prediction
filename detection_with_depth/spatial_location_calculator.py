@@ -20,7 +20,7 @@ class SpatialLocationCalculator():
         
         self.scale = 1000
 
-    def calc_location(self, roi, depthMap):
+    def calc_location_relative_to_camera(self, roi, depthMap):
         # Take 10x10 depth pixels around center of bounding box for depth averaging
         cx, cy = (roi[0]+roi[2])//2, (roi[1]+roi[3])//2
         # ensures that the bounding box for averaging, defined by xmin, ymin, xmax, ymax, 
@@ -48,8 +48,8 @@ class SpatialLocationCalculator():
         return int(rX + self.image_width // 2), int(rY + self.image_height // 2)
 
 
-    def calc_distance(self, roi, depthMap):
-        X, Y, Z = self.calc_location(roi, depthMap)
+    def calc_distance_from_camera(self, roi, depthMap):
+        X, Y, Z = self.calc_location_relative_to_camera(roi, depthMap)
         return np.sqrt(X**2 + Y**2 + Z**2)
 
     # def calc_HFOV(self):

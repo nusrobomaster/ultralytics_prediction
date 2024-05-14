@@ -48,9 +48,9 @@ class SpatialLocationCalculator():
         return int(rX + self.image_width // 2), int(rY + self.image_height // 2)
 
 
-    def calc_distance_from_camera(self, roi, depthMap):
-        X, Y, Z = self.calc_location_relative_to_camera(roi, depthMap)
-        return np.sqrt(X**2 + Y**2 + Z**2)
+    def calc_distance_from_camera(self, X, Y, Z):
+        # return np.sqrt(X**2 + Y**2 + Z**2)
+        return np.sqrt(X**2 + Z**2)
 
     # def calc_HFOV(self):
     #     focal_length_px = self.calib_matrix[0, 0]

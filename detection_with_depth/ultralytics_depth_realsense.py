@@ -122,9 +122,11 @@ if __name__ == '__main__':
             # Run YOLOv8 inference
             results = model(color_image, verbose=False, classes=67)
 
+            # list to store distances from detected objects
+            detection_information, detection_distance_info = [], []
+
             # Get bounding box coordinates and depth
             for det in results[0].boxes:
-                # print(det)
                 confidence = det.conf
                 if confidence > conf_threshold:
                     # det.xyxy has the format tensor([xmin, ymin, xmax, ymax])
@@ -138,6 +140,10 @@ if __name__ == '__main__':
                     # Calculate gimbal adjustments
                     yaw_adjustment, pitch_adjustment = calculate_gimbal_adjustment((xmin, ymin, xmax, ymax))
                     
+                    # Append to detection list
+                    detection_distance_info.append(distance_from_camera)
+                    detection_information.append(((centroid_x, centroid_y), (yaw_adjustment, pitch_adjustment), (pos_x, pos_y)))
+
                     # Draw bounding box
                     object_str = "cls: {}".format(det.cls[0])
                     confidence_str = "conf: {:.2f}".format(confidence.tolist()[0])
@@ -147,16 +153,17 @@ if __name__ == '__main__':
                     cv2.putText(color_image, confidence_str, (xmin, ymin - 30), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (36,255,12), 2)
                     cv2.putText(color_image, depth_str, (xmin, ymin - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (36,255,12), 2)
 
-                    # Print object information 
-                    print("Object {} detected at x = {:.2f}m, y = {:.2f}m, z = {:.2f}m".format(object_str, centroid_x, centroid_y, depth_value))
-                    print("Euclidean distance away: {:.2f}m".format(distance_from_camera))
-                    print("{} has coordinates x = {:.2f}m, y = {:.2f}m relative to the map".format(object_str, pos_x, pos_y))
-                    print("Gimbal adjustments: yaw = {:.2f} radians, pitch = {:.2f} radians".format(yaw_adjustment, pitch_adjustment))
-
-            elapsed_time_lst.append(time.time() - last_time)
-            # print(elapsed_time_lst[-1])
-            last_time = time.time()
+            if detection_information:
             
+                target_index = np.argmin(detection_distance_info) 
+                (target_centroid_x, target_centroid_y), (yaw_adjustment, pitch_adjustment), (target_pos_x, target_pos_y) = detection_information[target_index] 
+                
+                # Print target information 
+                print("Target {} is at x = {:.2f}m, y = {:.2f}m, z = {:.2f}m".format(object_str, target_centroid_x, target_centroid_y, depth_value))
+                print("Euclidean distance away: {:.2f}m".format(detection_distance_info[target_index]))
+                print("{} has coordinates x = {:.2f}m, y = {:.2f}m relative to the map".format(object_str, target_pos_x, target_pos_y))
+                print("Gimbal adjustments: yaw = {:.2f} radians, pitch = {:.2f} radians".format(yaw_adjustment, pitch_adjustment))
+
             # Display the resulting frame
             cv2.imshow('Object Detection', color_image)
             

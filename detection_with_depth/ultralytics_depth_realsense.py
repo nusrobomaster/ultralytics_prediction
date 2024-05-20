@@ -11,6 +11,12 @@ IMAGE_HEIGHT = 480
 
 spatial_location_calculator = SpatialLocationCalculator(IMAGE_WIDTH, IMAGE_HEIGHT)
 
+HFOV = spatial_location_calculator.calc_HFOV()
+VFOV = spatial_location_calculator.calc_VFOV()
+
+print("Horizontal FOV: ", HFOV)
+print("Vertical FOV: ", VFOV)
+
 # Configure depth and color streams
 pipeline = rs.pipeline()
 config = rs.config()
@@ -34,7 +40,7 @@ align = rs.align(align_to)
 conf_threshold = 0.5
 
 # Eventually replace with a ROS2 subscriber node which retrieves camera coordinates
-# x,y are measures from the lower right corner of the map. yaw the angle measured anticlockwise from the x-axis
+# x,y are measured from the upper left corner of the map. yaw the angle measured anticlockwise from the x-axis
 def get_camera_coords():        
     camera_coords = input("Enter coordinates for camera position and yaw in meters and radians in the format x,y,yaw: ")
     camera_coords = np.array(camera_coords.split(','), dtype=np.float32)
@@ -59,11 +65,32 @@ def calc_location_relative_to_map(camera_coords, relative_object_coords, object_
     object_coords = vector_from_cam_to_object + camera_coords[:2]
     return object_coords   # x,y coordinates of object relative to map
 
+# Additional code required: when multiple armour plates are detected, choose the one which is closest to the camera
+def calculate_gimbal_adjustment(bbox, image_width=IMAGE_WIDTH, image_height=IMAGE_HEIGHT,
+                                fov_horizontal=HFOV, fov_vertical=VFOV):
+    # Calculate the center of the bounding box
+    bbox_center_x = (bbox[0] + bbox[2]) / 2
+    bbox_center_y = (bbox[1] + bbox[3]) / 2
+
+    # Calculate the center of the image frame
+    image_center_x = image_width / 2
+    image_center_y = image_height / 2
+
+    # Calculate the difference between the centers
+    delta_x = bbox_center_x - image_center_x
+    delta_y = bbox_center_y - image_center_y
+
+    # Calculate the corresponding yaw and pitch adjustments
+    yaw_adjustment = (delta_x / image_width) * fov_horizontal
+    pitch_adjustment = (delta_y / image_height) * fov_vertical
+
+    return yaw_adjustment, pitch_adjustment
+
 camera_coords = get_camera_coords()
 
 if __name__ == '__main__':
     model = YOLO("yolov8n.pt")
-    # model = YOLO("RM_130524_11pm.pt")
+    # model = YOLO("RM_150524_8pm.pt")
 
     num_frames_processed = 0
     last_time = start = time.time()
@@ -107,6 +134,9 @@ if __name__ == '__main__':
                     centroid_x, centroid_y, depth_value = spatial_location_calculator.calc_location_relative_to_camera((xmin, ymin, xmax, ymax), depth_image)
                     distance_from_camera = spatial_location_calculator.calc_distance_from_camera(centroid_x, centroid_y, depth_value)
                     pos_x, pos_y = calc_location_relative_to_map(camera_coords, (centroid_x, depth_value), distance_from_camera)
+
+                    # Calculate gimbal adjustments
+                    yaw_adjustment, pitch_adjustment = calculate_gimbal_adjustment((xmin, ymin, xmax, ymax))
                     
                     # Draw bounding box
                     object_str = "cls: {}".format(det.cls[0])
@@ -117,10 +147,11 @@ if __name__ == '__main__':
                     cv2.putText(color_image, confidence_str, (xmin, ymin - 30), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (36,255,12), 2)
                     cv2.putText(color_image, depth_str, (xmin, ymin - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (36,255,12), 2)
 
-                    # Print coordinates and depth
+                    # Print object information 
                     print("Object {} detected at x = {:.2f}m, y = {:.2f}m, z = {:.2f}m".format(object_str, centroid_x, centroid_y, depth_value))
                     print("Euclidean distance away: {:.2f}m".format(distance_from_camera))
                     print("{} has coordinates x = {:.2f}m, y = {:.2f}m relative to the map".format(object_str, pos_x, pos_y))
+                    print("Gimbal adjustments: yaw = {:.2f} radians, pitch = {:.2f} radians".format(yaw_adjustment, pitch_adjustment))
 
             elapsed_time_lst.append(time.time() - last_time)
             # print(elapsed_time_lst[-1])

@@ -1,4 +1,5 @@
 import numpy as np
+import math
 
 class SpatialLocationCalculator():
     def __init__(self, horizontal_length, vertical_length):
@@ -52,7 +53,12 @@ class SpatialLocationCalculator():
         # return np.sqrt(X**2 + Y**2 + Z**2)
         return np.sqrt(X**2 + Z**2)
 
-    # def calc_HFOV(self):
-    #     focal_length_px = self.calib_matrix[0, 0]
-    #     HFOV_radians = 2 * math.atan(self.image_width / (2 * focal_length_px))
-    #     return HFOV_radians
+    def calc_HFOV(self):
+        focal_length_px = self.calib_matrix[0, 0]
+        HFOV_radians = 2 * math.atan(self.image_width / (2 * focal_length_px))
+        return HFOV_radians
+
+    def calc_VFOV(self):
+        focal_length_px = self.calib_matrix[1, 1]
+        VFOV_radians = 2 * math.atan(self.image_height / (2 * focal_length_px))
+        return VFOV_radians

@@ -98,6 +98,7 @@ if __name__ == '__main__':
     elapsed_time_lst = []
 
     try:
+        last_valid_depth_value = 0
         while True:
 
             # Wait for a coherent pair of frames: depth and color
@@ -134,20 +135,25 @@ if __name__ == '__main__':
                     
                     # Find centroid coordinates and depth information
                     centroid_x, centroid_y, depth_value = spatial_location_calculator.calc_location_relative_to_camera((xmin, ymin, xmax, ymax), depth_image)
-                    distance_from_camera = spatial_location_calculator.calc_distance_from_camera(centroid_x, centroid_y, depth_value)
-                    pos_x, pos_y = calc_location_relative_to_map(camera_coords, (centroid_x, depth_value), distance_from_camera)
+                    distance_from_camera = spatial_location_calculator.calc_distance_from_camera(centroid_x, centroid_y, last_valid_depth_value)
+                    pos_x, pos_y = calc_location_relative_to_map(camera_coords, (centroid_x, last_valid_depth_value), distance_from_camera)
 
                     # Calculate gimbal adjustments
                     yaw_adjustment, pitch_adjustment = calculate_gimbal_adjustment((xmin, ymin, xmax, ymax))
                     
-                    # Append to detection list
-                    detection_distance_info.append(distance_from_camera)
-                    detection_information.append(((centroid_x, centroid_y), (yaw_adjustment, pitch_adjustment), (pos_x, pos_y)))
-
+                    # Update last valid depth value
+                    is_valid_depth_value = not np.isnan(depth_value) and not np.isinf(depth_value)
+                    if is_valid_depth_value: 
+                        last_valid_depth_value = depth_value
+                        
+                        # Append to detection list
+                        detection_distance_info.append(distance_from_camera)
+                        detection_information.append(((centroid_x, centroid_y), (yaw_adjustment, pitch_adjustment), (pos_x, pos_y)))
+                        
                     # Draw bounding box
                     object_str = "cls: {}".format(det.cls[0])
                     confidence_str = "conf: {:.2f}".format(confidence.tolist()[0])
-                    depth_str = "distance: {:.2f} meters".format(depth_value)
+                    depth_str = "distance: {:.2f} meters".format(last_valid_depth_value)
                     cv2.rectangle(color_image, (xmin, ymin), (xmax, ymax), (0, 255, 0), 2)
                     cv2.putText(color_image, str(object_str), (xmin, ymin - 50), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (36,255,12), 2)
                     cv2.putText(color_image, confidence_str, (xmin, ymin - 30), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (36,255,12), 2)
@@ -159,7 +165,7 @@ if __name__ == '__main__':
                 (target_centroid_x, target_centroid_y), (yaw_adjustment, pitch_adjustment), (target_pos_x, target_pos_y) = detection_information[target_index] 
                 
                 # Print target information 
-                print("Target {} is at x = {:.2f}m, y = {:.2f}m, z = {:.2f}m".format(object_str, target_centroid_x, target_centroid_y, depth_value))
+                print("Target {} is at x = {:.2f}m, y = {:.2f}m, z = {:.2f}m".format(object_str, target_centroid_x, target_centroid_y, last_valid_depth_value))
                 print("Euclidean distance away: {:.2f}m".format(detection_distance_info[target_index]))
                 print("{} has coordinates x = {:.2f}m, y = {:.2f}m relative to the map".format(object_str, target_pos_x, target_pos_y))
                 print("Gimbal adjustments: yaw = {:.2f} radians, pitch = {:.2f} radians".format(yaw_adjustment, pitch_adjustment))

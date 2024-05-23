@@ -4,6 +4,8 @@ import pyrealsense2 as rs
 import numpy as np
 import cv2
 from spatial_location_calculator import SpatialLocationCalculator
+from dummy_gimbal import DummyGimbal
+from gimbal import Gimbal
 import math
 
 IMAGE_WIDTH = 640
@@ -65,32 +67,14 @@ def calc_location_relative_to_map(camera_coords, relative_object_coords, object_
     object_coords = vector_from_cam_to_object + camera_coords[:2]
     return object_coords   # x,y coordinates of object relative to map
 
-# Additional code required: when multiple armour plates are detected, choose the one which is closest to the camera
-def calculate_gimbal_adjustment(bbox, image_width=IMAGE_WIDTH, image_height=IMAGE_HEIGHT,
-                                fov_horizontal=HFOV, fov_vertical=VFOV):
-    # Calculate the center of the bounding box
-    bbox_center_x = (bbox[0] + bbox[2]) / 2
-    bbox_center_y = (bbox[1] + bbox[3]) / 2
-
-    # Calculate the center of the image frame
-    image_center_x = image_width / 2
-    image_center_y = image_height / 2
-
-    # Calculate the difference between the centers
-    delta_x = bbox_center_x - image_center_x
-    delta_y = bbox_center_y - image_center_y
-
-    # Calculate the corresponding yaw and pitch adjustments
-    yaw_adjustment = (delta_x / image_width) * fov_horizontal
-    pitch_adjustment = (delta_y / image_height) * fov_vertical
-
-    return yaw_adjustment, pitch_adjustment
-
 camera_coords = get_camera_coords()
 
 if __name__ == '__main__':
     model = YOLO("yolov8n.pt")
     # model = YOLO("RM_150524_8pm.pt")
+
+    gimbal = Gimbal(IMAGE_WIDTH, IMAGE_HEIGHT, HFOV, VFOV)
+    dummy_gimbal = DummyGimbal()
 
     num_frames_processed = 0
     last_time = start = time.time()
@@ -139,8 +123,11 @@ if __name__ == '__main__':
                     pos_x, pos_y = calc_location_relative_to_map(camera_coords, (centroid_x, last_valid_depth_value), distance_from_camera)
 
                     # Calculate gimbal adjustments
-                    yaw_adjustment, pitch_adjustment = calculate_gimbal_adjustment((xmin, ymin, xmax, ymax))
-                    
+                    new_gimbal_yaw, new_gimbal_pitch = gimbal.calculate_expected_gimbal_orientation((xmin, ymin, xmax, ymax))
+
+                    # # Simulate gimbal movement
+                    # dummy_gimbal.move_to(new_gimbal_yaw, new_gimbal_pitch)
+
                     # Update last valid depth value
                     is_valid_depth_value = not np.isnan(depth_value) and not np.isinf(depth_value)
                     if is_valid_depth_value: 
@@ -148,7 +135,7 @@ if __name__ == '__main__':
                         
                         # Append to detection list
                         detection_distance_info.append(distance_from_camera)
-                        detection_information.append(((centroid_x, centroid_y), (yaw_adjustment, pitch_adjustment), (pos_x, pos_y)))
+                        detection_information.append(((centroid_x, centroid_y), (new_gimbal_yaw, new_gimbal_pitch), (pos_x, pos_y)))
                         
                     # Draw bounding box
                     object_str = "cls: {}".format(det.cls[0])
@@ -162,14 +149,22 @@ if __name__ == '__main__':
             if detection_information:
             
                 target_index = np.argmin(detection_distance_info) 
-                (target_centroid_x, target_centroid_y), (yaw_adjustment, pitch_adjustment), (target_pos_x, target_pos_y) = detection_information[target_index] 
+                (target_centroid_x, target_centroid_y), (gimbal_yaw, gimbal_pitch), (target_pos_x, target_pos_y) = detection_information[target_index] 
                 
                 # Print target information 
-                print("Target {} is at x = {:.2f}m, y = {:.2f}m, z = {:.2f}m".format(object_str, target_centroid_x, target_centroid_y, last_valid_depth_value))
-                print("Euclidean distance away: {:.2f}m".format(detection_distance_info[target_index]))
-                print("{} has coordinates x = {:.2f}m, y = {:.2f}m relative to the map".format(object_str, target_pos_x, target_pos_y))
-                print("Gimbal adjustments: yaw = {:.2f} radians, pitch = {:.2f} radians".format(yaw_adjustment, pitch_adjustment))
+                # print("Target {} is at x = {:.2f}m, y = {:.2f}m, z = {:.2f}m".format(object_str, target_centroid_x, target_centroid_y, last_valid_depth_value))
+                # print("Euclidean distance away: {:.2f}m".format(detection_distance_info[target_index]))
+                # print("{} has coordinates x = {:.2f}m, y = {:.2f}m relative to the map".format(object_str, target_pos_x, target_pos_y))
+                print("New gimbal orientation: yaw = {:.2f} radians, pitch = {:.2f} radians".format(gimbal_yaw, gimbal_pitch))
+                print("Gimbal is at yaw = {:.2f} radians, pitch = {:.2f} radians".format(gimbal.get_current_orientation()[0], gimbal.get_current_orientation()[1]))
 
+            # # Simulate gimbal movement
+            # dummy_gimbal.update()
+            # if dummy_gimbal.has_target and not dummy_gimbal.moving:
+            #     gimbal.update_orientation(gimbal_yaw, gimbal_pitch)
+            #     dummy_gimbal.has_target = False
+                
+            
             # Display the resulting frame
             cv2.imshow('Object Detection', color_image)
             

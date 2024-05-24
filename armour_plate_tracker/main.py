@@ -11,15 +11,17 @@ class Main:
     def __init__(self):
         self.image_width = 640
         self.image_height = 480
+        # self.camera_coords = self.camera.get_camera_coords()
+        self.camera_coords = np.array([0, 0, 0], dtype=np.float32)
+        self.conf_threshold = 0.5
+        
+        # Objects
         self.camera = Camera(self.image_width, self.image_height)
         self.object_detector = ObjectDetector("yolov8n.pt")
         self.spatial_calculator = SpatialCalculator(self.image_width, self.image_height)
         self.gimbal = Gimbal(self.image_width, self.image_height, self.spatial_calculator.HFOV, self.spatial_calculator.VFOV)
-        # self.camera_coords = self.camera.get_camera_coords()
-        self.camera_coords = np.array([0, 0, 0], dtype=np.float32)
-        self.conf_threshold = 0.5
 
-        # Initialise Supervision components
+        # Supervision components
         self.tracker = sv.ByteTrack()
         self.box_annotator = sv.BoundingBoxAnnotator()
         self.label_annotator = sv.LabelAnnotator()
@@ -41,7 +43,6 @@ class Main:
                 results = self.object_detector.detect_objects(color_image)
 
                 # Convert results to Supervision detections
-                boxes = results.boxes
                 detections = sv.Detections.from_ultralytics(results)
                 detections = self.tracker.update_with_detections(detections)
                 
@@ -49,14 +50,8 @@ class Main:
                 # if detections.tracker_id:
                 #     detections = self.smoother.update_with_detections(detections)
 
-                labels = [
-                    f"#{tracker_id} {results.names[class_id]}"
-                    for class_id, tracker_id in zip(detections.class_id, detections.tracker_id)
-                ]
-
                 # Annotate the frame
                 annotated_frame = self.box_annotator.annotate(color_image.copy(), detections=detections)
-                
                 if len(detections) > 0:
                     labels = [
                         f"#{tracker_id} {results.names[class_id]}"
@@ -65,6 +60,7 @@ class Main:
                     if labels:
                         annotated_frame = self.label_annotator.annotate(annotated_frame, detections=detections, labels=labels)
 
+                # Process each detection
                 detection_information, detection_distance_info = [], []
                 for i in range(len(detections.xyxy)):
                     confidence = detections.confidence[i]
@@ -97,11 +93,7 @@ class Main:
                         confidence_str = f"conf: {confidence:.2f}"
                         depth_str = f"distance: {last_valid_depth_value:.2f} meters"
 
-                        # # Annotate object details on the frame
-                        # cv2.putText(annotated_frame, str(object_str), (xmin, ymin - 50), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (36, 255, 12), 2)
-                        # cv2.putText(annotated_frame, confidence_str, (xmin, ymin - 30), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (36, 255, 12), 2)
-                        # cv2.putText(annotated_frame, depth_str, (xmin, ymin - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (36, 255, 12), 2)
-
+                # Print detection information 
                 if detection_information:
                     target_index = np.argmin(detection_distance_info)
                     (target_centroid_x, target_centroid_y), (yaw_adjustment, pitch_adjustment), (yaw_offset, pitch_offset), (target_pos_x, target_pos_y) = detection_information[target_index]

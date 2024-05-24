@@ -1,6 +1,0 @@
-source;share/gimbal/hook/pythonpath.ps1
-source;share/gimbal/hook/pythonpath.dsv
-source;share/gimbal/hook/pythonpath.sh
-source;share/gimbal/hook/ament_prefix_path.ps1
-source;share/gimbal/hook/ament_prefix_path.dsv
-source;share/gimbal/hook/ament_prefix_path.sh

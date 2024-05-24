@@ -13,7 +13,7 @@ config.enable_stream(rs.stream.color, 640, 480, rs.format.bgr8, 30)
 pipeline.start(config)
 
 if __name__ == '__main__':
-    model = YOLO("yolov8n.pt")
+    model = YOLO("RM_150524_8pm.pt")
 
     num_frames_processed = 0
     last_time = start = time.time()

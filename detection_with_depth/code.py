@@ -1,3 +1,4 @@
+from collections import defaultdict
 import time
 import pyrealsense2 as rs
 import numpy as np
@@ -90,14 +91,15 @@ class Main:
         self.camera_coords = np.array([0, 0, 0], dtype=np.float32)
         self.conf_threshold = 0.5
 
-        # Initialize Supervision components
+        # Initialise Supervision components
         self.tracker = sv.ByteTrack()
         self.box_annotator = sv.BoundingBoxAnnotator()
         self.label_annotator = sv.LabelAnnotator()
         self.trace_annotator = sv.TraceAnnotator()
-        # self.smoother = sv.DetectionsSmoother()
 
-    # Replace with ros2 subscriber for camera coordinates
+        # Dictionary to store previous positions of tracked objects
+        self.previous_positions = defaultdict(lambda: None)
+
     def get_camera_coords(self):
         camera_coords = input("Enter coordinates for camera position and yaw in meters and radians in the format x,y,yaw: ")
         camera_coords = np.array(camera_coords.split(','), dtype=np.float32)
@@ -112,9 +114,10 @@ class Main:
         movement = current_position[0] - previous_position[0]
         self.previous_positions[tracker_id] = current_position
 
-        if movement > 0:
+        movement_buffer = 2
+        if movement > movement_buffer:
             return "Moving Right"
-        elif movement < 0:
+        elif movement < -movement_buffer:
             return "Moving Left"
         else:
             return "Stationary"
@@ -139,7 +142,7 @@ class Main:
                 detections = sv.Detections.from_ultralytics(results)
                 detections = self.tracker.update_with_detections(detections)
                 
-                # optional smoothing
+                # Optional smoothing
                 # if detections.tracker_id:
                 #     detections = self.smoother.update_with_detections(detections)
 
@@ -160,10 +163,20 @@ class Main:
                         annotated_frame = self.label_annotator.annotate(annotated_frame, detections=detections, labels=labels)
 
                 detection_information, detection_distance_info = [], []
-                for det in boxes:
-                    confidence = det.conf
+                for i in range(len(detections.xyxy)):
+                    confidence = detections.confidence[i]
                     if confidence > self.conf_threshold:
-                        xmin, ymin, xmax, ymax = map(int, det.xyxy[0].tolist())
+                        bbox = detections.xyxy[i]
+                        class_name = detections.data['class_name'][i]
+
+                        xmin, ymin, xmax, ymax = map(int, bbox)
+                        current_position = ((xmin + xmax) // 2, (ymin + ymax) // 2)
+
+                        if len(detections.tracker_id) > 0:
+                            tracker_id = detections.tracker_id[i]
+                            direction = self.determine_direction_of_movement(tracker_id, current_position)
+                            cv2.putText(annotated_frame, direction, (xmin, ymin - 20), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (36, 255, 12), 2)
+
                         centroid_x, centroid_y, depth_value = self.spatial_calculator.spatial_location_calculator.calc_location_relative_to_camera((xmin, ymin, xmax, ymax), depth_image)
                         distance_from_camera = self.spatial_calculator.spatial_location_calculator.calc_distance_from_camera(centroid_x, centroid_y, last_valid_depth_value)
                         pos_x, pos_y = self.spatial_calculator.calculate_object_location(self.camera_coords, (centroid_x, last_valid_depth_value), distance_from_camera)
@@ -175,21 +188,22 @@ class Main:
                             detection_distance_info.append(distance_from_camera)
                             detection_information.append(((centroid_x, centroid_y), (yaw_adjustment, pitch_adjustment), (pos_x, pos_y)))
 
-                        object_str = "cls: {}".format(det.cls[0])
-                        confidence_str = "conf: {:.2f}".format(confidence.tolist()[0])
-                        depth_str = "distance: {:.2f} meters".format(last_valid_depth_value)
-                        # cv2.rectangle(color_image, (xmin, ymin), (xmax, ymax), (0, 255, 0), 2)
-                        # cv2.putText(color_image, str(object_str), (xmin, ymin - 50), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (36, 255, 12), 2)
-                        # cv2.putText(color_image, confidence_str, (xmin, ymin - 30), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (36, 255, 12), 2)
-                        # cv2.putText(color_image, depth_str, (xmin, ymin - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (36, 255, 12), 2)
+                        object_str = f"objects: {class_name}"
+                        confidence_str = f"conf: {confidence:.2f}"
+                        depth_str = f"distance: {last_valid_depth_value:.2f} meters"
+
+                        # # Annotate object details on the frame
+                        # cv2.putText(annotated_frame, str(object_str), (xmin, ymin - 50), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (36, 255, 12), 2)
+                        # cv2.putText(annotated_frame, confidence_str, (xmin, ymin - 30), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (36, 255, 12), 2)
+                        # cv2.putText(annotated_frame, depth_str, (xmin, ymin - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (36, 255, 12), 2)
 
                 if detection_information:
                     target_index = np.argmin(detection_distance_info)
                     (target_centroid_x, target_centroid_y), (yaw_adjustment, pitch_adjustment), (target_pos_x, target_pos_y) = detection_information[target_index]
-                    print("Target {} is at x = {:.2f}m, y = {:.2f}m, z = {:.2f}m".format(object_str, target_centroid_x, target_centroid_y, last_valid_depth_value))
-                    print("Euclidean distance away: {:.2f}m".format(detection_distance_info[target_index]))
-                    print("{} has coordinates x = {:.2f}m, y = {:.2f}m relative to the map".format(object_str, target_pos_x, target_pos_y))
-                    print("Gimbal adjustments: yaw = {:.2f} radians, pitch = {:.2f} radians".format(yaw_adjustment, pitch_adjustment))
+                    print(f"Target {object_str} is at x = {target_centroid_x:.2f}m, y = {target_centroid_y:.2f}m, z = {last_valid_depth_value:.2f}m")
+                    print(f"Euclidean distance away: {detection_distance_info[target_index]:.2f}m")
+                    print(f"{object_str} has coordinates x = {target_pos_x:.2f}m, y = {target_pos_y:.2f}m relative to the map")
+                    print(f"Gimbal adjustments: yaw = {yaw_adjustment:.2f} radians, pitch = {pitch_adjustment:.2f} radians")
 
                 cv2.imshow('Object Detection', annotated_frame)
                 if cv2.waitKey(1) & 0xFF == ord('q'):
@@ -200,9 +214,9 @@ class Main:
             end = time.time()
             elapsed = end - start
             fps = num_frames_processed / elapsed
-            print("FPS: {} / {:.2f} = {:.2f}".format(num_frames_processed, elapsed, fps))
-            print("Average elapsed time: ", sum(elapsed_time_lst) / len(elapsed_time_lst))
+            print(f"FPS: {num_frames_processed} / {elapsed:.2f} = {fps:.2f}")
+            print(f"Average elapsed time: {sum(elapsed_time_lst) / len(elapsed_time_lst):.2f}")
 
 if __name__ == '__main__':
     main_app = Main()
-    main_app.run() 
+    main_app.run()

@@ -4,7 +4,6 @@ import numpy as np
 import cv2
 from ultralytics import YOLO
 import math
-import supervision as sv
 from spatial_location_calculator import SpatialLocationCalculator
 
 class Camera:
@@ -44,9 +43,8 @@ class ObjectDetector:
         self.conf_threshold = conf_threshold
 
     def detect_objects(self, image):
-        # results = self.model(image, verbose=False, classes=67)
-        # return results[0].boxes
-        return self.model(image, verbose=False, classes=67)[0]
+        results = self.model(image, verbose=False, classes=67)
+        return results[0].boxes
 
 class SpatialCalculator:
     def __init__(self, image_width, image_height):
@@ -86,15 +84,8 @@ class Main:
         self.camera = Camera(self.image_width, self.image_height)
         self.object_detector = ObjectDetector("yolov8n.pt")
         self.spatial_calculator = SpatialCalculator(self.image_width, self.image_height)
-        # self.camera_coords = self.get_camera_coords()
-        self.camera_coords = np.array([0, 0, 0], dtype=np.float32)
+        self.camera_coords = self.get_camera_coords()
         self.conf_threshold = 0.5
-
-        # Initialize Supervision components
-        self.tracker = sv.ByteTrack()
-        self.box_annotator = sv.BoundingBoxAnnotator()
-        self.label_annotator = sv.LabelAnnotator()
-        self.trace_annotator = sv.TraceAnnotator()
 
     def get_camera_coords(self):
         camera_coords = input("Enter coordinates for camera position and yaw in meters and radians in the format x,y,yaw: ")
@@ -117,28 +108,7 @@ class Main:
                 results = self.object_detector.detect_objects(color_image)
                 detection_information, detection_distance_info = [], []
 
-                # Convert results to Supervision detections
-                boxes = results.boxes
-                detections = sv.Detections.from_ultralytics(results)
-                detections = self.tracker.update_with_detections(detections)
-
-                labels = [
-                    f"#{tracker_id} {results.names[class_id]}"
-                    for class_id, tracker_id in zip(detections.class_id, detections.tracker_id)
-                ]
-
-                # Annotate the frame
-                annotated_frame = self.box_annotator.annotate(color_image.copy(), detections=detections)
-                
-                if len(detections) > 0:
-                    labels = [
-                        f"#{tracker_id} {results.names[class_id]}"
-                        for class_id, tracker_id in zip(detections.class_id, detections.tracker_id)
-                    ]
-                    if labels:
-                        annotated_frame = self.label_annotator.annotate(annotated_frame, detections=detections, labels=labels)
-
-                for det in boxes:
+                for det in results:
                     confidence = det.conf
                     if confidence > self.conf_threshold:
                         xmin, ymin, xmax, ymax = map(int, det.xyxy[0].tolist())
@@ -156,10 +126,10 @@ class Main:
                         object_str = "cls: {}".format(det.cls[0])
                         confidence_str = "conf: {:.2f}".format(confidence.tolist()[0])
                         depth_str = "distance: {:.2f} meters".format(last_valid_depth_value)
-                        # cv2.rectangle(color_image, (xmin, ymin), (xmax, ymax), (0, 255, 0), 2)
-                        # cv2.putText(color_image, str(object_str), (xmin, ymin - 50), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (36, 255, 12), 2)
-                        # cv2.putText(color_image, confidence_str, (xmin, ymin - 30), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (36, 255, 12), 2)
-                        # cv2.putText(color_image, depth_str, (xmin, ymin - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (36, 255, 12), 2)
+                        cv2.rectangle(color_image, (xmin, ymin), (xmax, ymax), (0, 255, 0), 2)
+                        cv2.putText(color_image, str(object_str), (xmin, ymin - 50), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (36, 255, 12), 2)
+                        cv2.putText(color_image, confidence_str, (xmin, ymin - 30), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (36, 255, 12), 2)
+                        cv2.putText(color_image, depth_str, (xmin, ymin - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (36, 255, 12), 2)
 
                 if detection_information:
                     target_index = np.argmin(detection_distance_info)
@@ -169,10 +139,10 @@ class Main:
                     print("{} has coordinates x = {:.2f}m, y = {:.2f}m relative to the map".format(object_str, target_pos_x, target_pos_y))
                     print("Gimbal adjustments: yaw = {:.2f} radians, pitch = {:.2f} radians".format(yaw_adjustment, pitch_adjustment))
 
-                cv2.imshow('Object Detection', annotated_frame)
+                cv2.imshow('Object Detection', color_image)
                 if cv2.waitKey(1) & 0xFF == ord('q'):
                     break
-                
+
         finally:
             self.camera.stop()
             end = time.time()
@@ -183,4 +153,4 @@ class Main:
 
 if __name__ == '__main__':
     main_app = Main()
-    main_app.run() 
+    main_app.run()

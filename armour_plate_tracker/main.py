@@ -1,125 +1,12 @@
-from collections import defaultdict
 import time
-import pyrealsense2 as rs
 import numpy as np
 import cv2
-from ultralytics import YOLO
-import math
 import supervision as sv
-from spatial_location_calculator import SpatialLocationCalculator
+from spatial_calculator import SpatialCalculator
+from camera import Camera
+from gimbal import Gimbal
+from object_detector import ObjectDetector
 
-class Camera:
-    def __init__(self, image_width, image_height):
-        self.pipeline = rs.pipeline()
-        self.config = rs.config()
-        self.image_width = image_width
-        self.image_height = image_height
-        self.align_to = rs.stream.color
-        self.align = rs.align(self.align_to)
-
-        self.config.enable_stream(rs.stream.color, image_width, image_height, rs.format.bgr8, 30)
-        self.config.enable_stream(rs.stream.depth, image_width, image_height, rs.format.z16, 30)
-
-        self.profile = self.pipeline.start(self.config)
-        self.depth_scale = self.profile.get_device().first_depth_sensor().get_depth_scale()
-
-        print("Depth Scale is: ", self.depth_scale)
-
-    def get_frames(self):
-        frames = self.pipeline.wait_for_frames()
-        aligned_frames = self.align.process(frames)
-        depth_frame = aligned_frames.get_depth_frame()
-        color_frame = aligned_frames.get_color_frame()
-        if not depth_frame or not color_frame:
-            return None, None
-        depth_image = np.asanyarray(depth_frame.get_data())
-        color_image = np.asanyarray(color_frame.get_data())
-        return depth_image, color_image
-    
-    def get_camera_coords(self):
-        camera_coords = input("Enter coordinates for camera position and yaw in meters and radians in the format x,y,yaw: ")
-        camera_coords = np.array(camera_coords.split(','), dtype=np.float32)
-        return camera_coords
-
-    def stop(self):
-        self.pipeline.stop()
-
-class ObjectDetector:
-    def __init__(self, model_path, conf_threshold=0.5):
-        self.model = YOLO(model_path)
-        self.conf_threshold = conf_threshold
-
-    def detect_objects(self, image):
-        return self.model(image, verbose=False, classes=67)[0]
-
-class Gimbal:
-    def __init__(self, image_width, image_height, HFOV, VFOV):
-        self.image_width = image_width
-        self.image_height = image_height
-        self.HFOV = HFOV
-        self.VFOV = VFOV
-
-    def calculate_gimbal_adjustment(self, bbox):
-        bbox_center_x = (bbox[0] + bbox[2]) / 2
-        bbox_center_y = (bbox[1] + bbox[3]) / 2
-        image_center_x = self.image_width / 2
-        image_center_y = self.image_height / 2
-        delta_x = bbox_center_x - image_center_x
-        delta_y = -(bbox_center_y - image_center_y)
-        yaw_adjustment = (delta_x / self.image_width) * self.HFOV
-        pitch_adjustment = (delta_y / self.image_height) * self.VFOV
-        return yaw_adjustment, pitch_adjustment
-
-    def calculate_gimbal_offsets(self, direction):
-        pitch_offset = -0.1
-        if direction == "Moving Right":
-            yaw_offset = 0.3
-        elif direction == "Moving Left":
-            yaw_offset = -0.3
-        else:
-            yaw_offset = 0
-        return yaw_offset, pitch_offset
-
-class SpatialCalculator:
-    def __init__(self, image_width, image_height):
-        self.spatial_location_calculator = SpatialLocationCalculator(image_width, image_height)
-        self.HFOV = self.spatial_location_calculator.calc_HFOV()
-        self.VFOV = self.spatial_location_calculator.calc_VFOV()
-        print("Horizontal FOV: ", self.HFOV)
-        print("Vertical FOV: ", self.VFOV)
-
-        # Dictionary to store previous positions of tracked objects
-        self.previous_positions = defaultdict(lambda: None)
-
-    def calculate_object_location(self, camera_coords, relative_object_coords, object_euclidean_distance):
-        cam_x, cam_y, cam_yaw = camera_coords
-        obj_pos_x, obj_depth = relative_object_coords
-        theta = cam_yaw + math.atan2(obj_pos_x, obj_depth)
-        theta = theta % (2 * math.pi)
-        vector_from_cam_to_object = np.array([
-            object_euclidean_distance * math.cos(theta),
-            object_euclidean_distance * math.sin(theta)
-        ])
-        object_coords = vector_from_cam_to_object + camera_coords[:2]
-        return object_coords
-    
-    def determine_direction_of_movement(self, tracker_id, current_position):
-        previous_position = self.previous_positions[tracker_id]
-        if previous_position is None:
-            self.previous_positions[tracker_id] = current_position
-            return "Stationary"
-
-        movement = current_position[0] - previous_position[0]
-        self.previous_positions[tracker_id] = current_position
-
-        movement_buffer = 2
-        if movement > movement_buffer:
-            return "Moving Right"
-        elif movement < -movement_buffer:
-            return "Moving Left"
-        else:
-            return "Stationary"
-        
 class Main:
     def __init__(self):
         self.image_width = 640

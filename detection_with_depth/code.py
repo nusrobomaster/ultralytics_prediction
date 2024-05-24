@@ -122,6 +122,16 @@ class Main:
         else:
             return "Stationary"
 
+    def calculate_gimbal_offsets(self, direction):
+        pitch_offset = -0.1
+        if direction == "Moving Right":
+            yaw_offset = 0.3
+        elif direction == "Moving Left":
+            yaw_offset = -0.3
+        else:
+            yaw_offset = 0
+        return yaw_offset, pitch_offset
+
     def run(self):
         num_frames_processed = 0
         start = time.time()
@@ -171,10 +181,12 @@ class Main:
 
                         xmin, ymin, xmax, ymax = map(int, bbox)
                         current_position = ((xmin + xmax) // 2, (ymin + ymax) // 2)
-
+                        yaw_offset, pitch_offset = 0, 0
+                        
                         if len(detections.tracker_id) > 0:
                             tracker_id = detections.tracker_id[i]
                             direction = self.determine_direction_of_movement(tracker_id, current_position)
+                            yaw_offset, pitch_offset = self.calculate_gimbal_offsets(direction)
                             cv2.putText(annotated_frame, direction, (xmin, ymin - 20), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (36, 255, 12), 2)
 
                         centroid_x, centroid_y, depth_value = self.spatial_calculator.spatial_location_calculator.calc_location_relative_to_camera((xmin, ymin, xmax, ymax), depth_image)
@@ -186,7 +198,7 @@ class Main:
                         if is_valid_depth_value:
                             last_valid_depth_value = depth_value
                             detection_distance_info.append(distance_from_camera)
-                            detection_information.append(((centroid_x, centroid_y), (yaw_adjustment, pitch_adjustment), (pos_x, pos_y)))
+                            detection_information.append(((centroid_x, centroid_y), (yaw_adjustment, pitch_adjustment), (yaw_offset, pitch_offset), (pos_x, pos_y)))
 
                         object_str = f"objects: {class_name}"
                         confidence_str = f"conf: {confidence:.2f}"
@@ -199,11 +211,12 @@ class Main:
 
                 if detection_information:
                     target_index = np.argmin(detection_distance_info)
-                    (target_centroid_x, target_centroid_y), (yaw_adjustment, pitch_adjustment), (target_pos_x, target_pos_y) = detection_information[target_index]
+                    (target_centroid_x, target_centroid_y), (yaw_adjustment, pitch_adjustment), (yaw_offset, pitch_offset), (target_pos_x, target_pos_y) = detection_information[target_index]
                     print(f"Target {object_str} is at x = {target_centroid_x:.2f}m, y = {target_centroid_y:.2f}m, z = {last_valid_depth_value:.2f}m")
                     print(f"Euclidean distance away: {detection_distance_info[target_index]:.2f}m")
                     print(f"{object_str} has coordinates x = {target_pos_x:.2f}m, y = {target_pos_y:.2f}m relative to the map")
-                    print(f"Gimbal adjustments: yaw = {yaw_adjustment:.2f} radians, pitch = {pitch_adjustment:.2f} radians")
+                    print(f"Angle of target relative to camera: yaw = {yaw_adjustment:.2f} radians, pitch = {pitch_adjustment:.2f} radians")
+                    print(f"Gimbal aims at: yaw = {yaw_adjustment + yaw_offset:.2f} radians, pitch = {pitch_adjustment + pitch_offset:.2f} radians")
 
                 cv2.imshow('Object Detection', annotated_frame)
                 if cv2.waitKey(1) & 0xFF == ord('q'):

@@ -95,7 +95,9 @@ class Main:
         self.box_annotator = sv.BoundingBoxAnnotator()
         self.label_annotator = sv.LabelAnnotator()
         self.trace_annotator = sv.TraceAnnotator()
+        # self.smoother = sv.DetectionsSmoother()
 
+    # Replace with ros2 subscriber for camera coordinates
     def get_camera_coords(self):
         camera_coords = input("Enter coordinates for camera position and yaw in meters and radians in the format x,y,yaw: ")
         camera_coords = np.array(camera_coords.split(','), dtype=np.float32)
@@ -115,12 +117,15 @@ class Main:
 
                 num_frames_processed += 1
                 results = self.object_detector.detect_objects(color_image)
-                detection_information, detection_distance_info = [], []
 
                 # Convert results to Supervision detections
                 boxes = results.boxes
                 detections = sv.Detections.from_ultralytics(results)
                 detections = self.tracker.update_with_detections(detections)
+                
+                # optional smoothing
+                # if detections.tracker_id:
+                #     detections = self.smoother.update_with_detections(detections)
 
                 labels = [
                     f"#{tracker_id} {results.names[class_id]}"
@@ -138,6 +143,7 @@ class Main:
                     if labels:
                         annotated_frame = self.label_annotator.annotate(annotated_frame, detections=detections, labels=labels)
 
+                detection_information, detection_distance_info = [], []
                 for det in boxes:
                     confidence = det.conf
                     if confidence > self.conf_threshold:

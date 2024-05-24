@@ -62,7 +62,7 @@ class SpatialCalculator:
         image_center_x = self.spatial_location_calculator.image_width / 2
         image_center_y = self.spatial_location_calculator.image_height / 2
         delta_x = bbox_center_x - image_center_x
-        delta_y = bbox_center_y - image_center_y
+        delta_y = -(bbox_center_y - image_center_y)
         yaw_adjustment = (delta_x / self.spatial_location_calculator.image_width) * self.HFOV
         pitch_adjustment = (delta_y / self.spatial_location_calculator.image_height) * self.VFOV
         return yaw_adjustment, pitch_adjustment

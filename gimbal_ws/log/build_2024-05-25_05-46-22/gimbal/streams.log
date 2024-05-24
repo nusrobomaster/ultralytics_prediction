@@ -1,0 +1,51 @@
+[0.506s] Invoking command in '/home/nicholas_tyy/GitHub_repos/Robomasters/ultralytics_prediction/gimbal_ws/src/gimbal': PS1=(RoboMasters) \[\e]0;\u@\h: \w\a\]\[\033[01;32m\]\u@\h\[\033[00m\]:\[\033[01;34m\]\w\[\033[00m\]\[\033[00;32m\]$(git_branch)\[\033[00m\]$ PYTHONPATH=/home/nicholas_tyy/GitHub_repos/Robomasters/ultralytics_prediction/gimbal_ws/build/gimbal/prefix_override:/home/nicholas_tyy/GitHub_repos/Robomasters/ultralytics_prediction/gimbal_ws/install/gimbal/lib/python3.10/site-packages:${PYTHONPATH} VIRTUAL_ENV_PROMPT=(RoboMasters) /usr/bin/python3 setup.py egg_info --egg-base ../../build/gimbal build --build-base /home/nicholas_tyy/GitHub_repos/Robomasters/ultralytics_prediction/gimbal_ws/build/gimbal/build install --record /home/nicholas_tyy/GitHub_repos/Robomasters/ultralytics_prediction/gimbal_ws/build/gimbal/install.log --single-version-externally-managed
+[0.633s] running egg_info
+[0.633s] creating ../../build/gimbal/gimbal.egg-info
+[0.641s] writing ../../build/gimbal/gimbal.egg-info/PKG-INFO
+[0.641s] writing dependency_links to ../../build/gimbal/gimbal.egg-info/dependency_links.txt
+[0.641s] writing entry points to ../../build/gimbal/gimbal.egg-info/entry_points.txt
+[0.641s] writing requirements to ../../build/gimbal/gimbal.egg-info/requires.txt
+[0.641s] writing top-level names to ../../build/gimbal/gimbal.egg-info/top_level.txt
+[0.641s] writing manifest file '../../build/gimbal/gimbal.egg-info/SOURCES.txt'
+[0.657s] reading manifest file '../../build/gimbal/gimbal.egg-info/SOURCES.txt'
+[0.657s] adding license file 'LICENSE'
+[0.657s] writing manifest file '../../build/gimbal/gimbal.egg-info/SOURCES.txt'
+[0.658s] running build
+[0.658s] running build_py
+[0.658s] creating /home/nicholas_tyy/GitHub_repos/Robomasters/ultralytics_prediction/gimbal_ws/build/gimbal/build
+[0.658s] creating /home/nicholas_tyy/GitHub_repos/Robomasters/ultralytics_prediction/gimbal_ws/build/gimbal/build/lib
+[0.658s] creating /home/nicholas_tyy/GitHub_repos/Robomasters/ultralytics_prediction/gimbal_ws/build/gimbal/build/lib/gimbal
+[0.658s] copying gimbal/__init__.py -> /home/nicholas_tyy/GitHub_repos/Robomasters/ultralytics_prediction/gimbal_ws/build/gimbal/build/lib/gimbal
+[0.658s] copying gimbal/dummy_gimbal_orientation_publisher.py -> /home/nicholas_tyy/GitHub_repos/Robomasters/ultralytics_prediction/gimbal_ws/build/gimbal/build/lib/gimbal
+[0.658s] running install
+[0.658s] /home/nicholas_tyy/.local/lib/python3.10/site-packages/setuptools/_distutils/cmd.py:66: SetuptoolsDeprecationWarning: setup.py install is deprecated.
+[0.658s] !!
+[0.658s] 
+[0.658s]         ********************************************************************************
+[0.658s]         Please avoid running ``setup.py`` directly.
+[0.658s]         Instead, use pypa/build, pypa/installer or other
+[0.658s]         standards-based tools.
+[0.658s] 
+[0.658s]         See https://blog.ganssle.io/articles/2021/10/setup-py-deprecated.html for details.
+[0.658s]         ********************************************************************************
+[0.658s] 
+[0.658s] !!
+[0.658s]   self.initialize_options()
+[0.661s] running install_lib
+[0.669s] creating /home/nicholas_tyy/GitHub_repos/Robomasters/ultralytics_prediction/gimbal_ws/install/gimbal/lib/python3.10/site-packages/gimbal
+[0.669s] copying /home/nicholas_tyy/GitHub_repos/Robomasters/ultralytics_prediction/gimbal_ws/build/gimbal/build/lib/gimbal/__init__.py -> /home/nicholas_tyy/GitHub_repos/Robomasters/ultralytics_prediction/gimbal_ws/install/gimbal/lib/python3.10/site-packages/gimbal
+[0.669s] copying /home/nicholas_tyy/GitHub_repos/Robomasters/ultralytics_prediction/gimbal_ws/build/gimbal/build/lib/gimbal/dummy_gimbal_orientation_publisher.py -> /home/nicholas_tyy/GitHub_repos/Robomasters/ultralytics_prediction/gimbal_ws/install/gimbal/lib/python3.10/site-packages/gimbal
+[0.669s] byte-compiling /home/nicholas_tyy/GitHub_repos/Robomasters/ultralytics_prediction/gimbal_ws/install/gimbal/lib/python3.10/site-packages/gimbal/__init__.py to __init__.cpython-310.pyc
+[0.669s] byte-compiling /home/nicholas_tyy/GitHub_repos/Robomasters/ultralytics_prediction/gimbal_ws/install/gimbal/lib/python3.10/site-packages/gimbal/dummy_gimbal_orientation_publisher.py to dummy_gimbal_orientation_publisher.cpython-310.pyc
+[0.669s] running install_data
+[0.677s] creating /home/nicholas_tyy/GitHub_repos/Robomasters/ultralytics_prediction/gimbal_ws/install/gimbal/share/ament_index
+[0.677s] creating /home/nicholas_tyy/GitHub_repos/Robomasters/ultralytics_prediction/gimbal_ws/install/gimbal/share/ament_index/resource_index
+[0.677s] creating /home/nicholas_tyy/GitHub_repos/Robomasters/ultralytics_prediction/gimbal_ws/install/gimbal/share/ament_index/resource_index/packages
+[0.677s] copying resource/gimbal -> /home/nicholas_tyy/GitHub_repos/Robomasters/ultralytics_prediction/gimbal_ws/install/gimbal/share/ament_index/resource_index/packages
+[0.677s] copying package.xml -> /home/nicholas_tyy/GitHub_repos/Robomasters/ultralytics_prediction/gimbal_ws/install/gimbal/share/gimbal
+[0.677s] running install_egg_info
+[0.686s] Copying ../../build/gimbal/gimbal.egg-info to /home/nicholas_tyy/GitHub_repos/Robomasters/ultralytics_prediction/gimbal_ws/install/gimbal/lib/python3.10/site-packages/gimbal-0.0.0-py3.10.egg-info
+[0.686s] running install_scripts
+[0.765s] Installing dummy_gimbal_orientation_publisher script to /home/nicholas_tyy/GitHub_repos/Robomasters/ultralytics_prediction/gimbal_ws/install/gimbal/lib/gimbal
+[0.765s] writing list of installed files to '/home/nicholas_tyy/GitHub_repos/Robomasters/ultralytics_prediction/gimbal_ws/build/gimbal/install.log'
+[0.780s] Invoked command in '/home/nicholas_tyy/GitHub_repos/Robomasters/ultralytics_prediction/gimbal_ws/src/gimbal' returned '0': PS1=(RoboMasters) \[\e]0;\u@\h: \w\a\]\[\033[01;32m\]\u@\h\[\033[00m\]:\[\033[01;34m\]\w\[\033[00m\]\[\033[00;32m\]$(git_branch)\[\033[00m\]$ PYTHONPATH=/home/nicholas_tyy/GitHub_repos/Robomasters/ultralytics_prediction/gimbal_ws/build/gimbal/prefix_override:/home/nicholas_tyy/GitHub_repos/Robomasters/ultralytics_prediction/gimbal_ws/install/gimbal/lib/python3.10/site-packages:${PYTHONPATH} VIRTUAL_ENV_PROMPT=(RoboMasters) /usr/bin/python3 setup.py egg_info --egg-base ../../build/gimbal build --build-base /home/nicholas_tyy/GitHub_repos/Robomasters/ultralytics_prediction/gimbal_ws/build/gimbal/build install --record /home/nicholas_tyy/GitHub_repos/Robomasters/ultralytics_prediction/gimbal_ws/build/gimbal/install.log --single-version-externally-managed

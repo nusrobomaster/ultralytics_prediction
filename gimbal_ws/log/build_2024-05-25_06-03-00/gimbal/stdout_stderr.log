@@ -1,0 +1,39 @@
+running egg_info
+writing ../../build/gimbal/gimbal.egg-info/PKG-INFO
+writing dependency_links to ../../build/gimbal/gimbal.egg-info/dependency_links.txt
+writing entry points to ../../build/gimbal/gimbal.egg-info/entry_points.txt
+writing requirements to ../../build/gimbal/gimbal.egg-info/requires.txt
+writing top-level names to ../../build/gimbal/gimbal.egg-info/top_level.txt
+reading manifest file '../../build/gimbal/gimbal.egg-info/SOURCES.txt'
+adding license file 'LICENSE'
+writing manifest file '../../build/gimbal/gimbal.egg-info/SOURCES.txt'
+running build
+running build_py
+copying gimbal/__init__.py -> /home/nicholas_tyy/GitHub_repos/Robomasters/ultralytics_prediction/gimbal_ws/build/gimbal/build/lib/gimbal
+copying gimbal/dummy_gimbal_orientation_publisher.py -> /home/nicholas_tyy/GitHub_repos/Robomasters/ultralytics_prediction/gimbal_ws/build/gimbal/build/lib/gimbal
+running install
+/home/nicholas_tyy/.local/lib/python3.10/site-packages/setuptools/_distutils/cmd.py:66: SetuptoolsDeprecationWarning: setup.py install is deprecated.
+!!
+
+        ********************************************************************************
+        Please avoid running ``setup.py`` directly.
+        Instead, use pypa/build, pypa/installer or other
+        standards-based tools.
+
+        See https://blog.ganssle.io/articles/2021/10/setup-py-deprecated.html for details.
+        ********************************************************************************
+
+!!
+  self.initialize_options()
+running install_lib
+copying /home/nicholas_tyy/GitHub_repos/Robomasters/ultralytics_prediction/gimbal_ws/build/gimbal/build/lib/gimbal/dummy_gimbal_orientation_publisher.py -> /home/nicholas_tyy/GitHub_repos/Robomasters/ultralytics_prediction/gimbal_ws/install/gimbal/lib/python3.10/site-packages/gimbal
+byte-compiling /home/nicholas_tyy/GitHub_repos/Robomasters/ultralytics_prediction/gimbal_ws/install/gimbal/lib/python3.10/site-packages/gimbal/dummy_gimbal_orientation_publisher.py to dummy_gimbal_orientation_publisher.cpython-310.pyc
+running install_data
+copying resource/gimbal -> /home/nicholas_tyy/GitHub_repos/Robomasters/ultralytics_prediction/gimbal_ws/install/gimbal/share/ament_index/resource_index/packages
+copying package.xml -> /home/nicholas_tyy/GitHub_repos/Robomasters/ultralytics_prediction/gimbal_ws/install/gimbal/share/gimbal
+running install_egg_info
+removing '/home/nicholas_tyy/GitHub_repos/Robomasters/ultralytics_prediction/gimbal_ws/install/gimbal/lib/python3.10/site-packages/gimbal-0.0.0-py3.10.egg-info' (and everything under it)
+Copying ../../build/gimbal/gimbal.egg-info to /home/nicholas_tyy/GitHub_repos/Robomasters/ultralytics_prediction/gimbal_ws/install/gimbal/lib/python3.10/site-packages/gimbal-0.0.0-py3.10.egg-info
+running install_scripts
+Installing dummy_gimbal_orientation_publisher script to /home/nicholas_tyy/GitHub_repos/Robomasters/ultralytics_prediction/gimbal_ws/install/gimbal/lib/gimbal
+writing list of installed files to '/home/nicholas_tyy/GitHub_repos/Robomasters/ultralytics_prediction/gimbal_ws/build/gimbal/install.log'

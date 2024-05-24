@@ -1,0 +1,9 @@
+Metadata-Version: 2.1
+Name: gimbal
+Version: 0.0.0
+Summary: TODO: Package description
+Maintainer: nicholas_tyy
+Maintainer-email: nicholastanyunyu@gmail.com
+License: Apache-2.0
+License-File: LICENSE
+Requires-Dist: setuptools

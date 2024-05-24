@@ -1,0 +1,2 @@
+[console_scripts]
+dummy_gimbal_orientation_publisher = gimbal.dummy_gimbal_orientation_publisher:main

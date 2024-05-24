@@ -103,6 +103,22 @@ class Main:
         camera_coords = np.array(camera_coords.split(','), dtype=np.float32)
         return camera_coords
 
+    def determine_direction_of_movement(self, tracker_id, current_position):
+        previous_position = self.previous_positions[tracker_id]
+        if previous_position is None:
+            self.previous_positions[tracker_id] = current_position
+            return "Stationary"
+
+        movement = current_position[0] - previous_position[0]
+        self.previous_positions[tracker_id] = current_position
+
+        if movement > 0:
+            return "Moving Right"
+        elif movement < 0:
+            return "Moving Left"
+        else:
+            return "Stationary"
+
     def run(self):
         num_frames_processed = 0
         start = time.time()

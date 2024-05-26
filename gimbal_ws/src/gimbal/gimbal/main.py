@@ -20,7 +20,6 @@ class Main:
         self.camera = Camera(self.image_width, self.image_height)
         self.object_detector = ObjectDetector("yolov8n.pt")
         self.spatial_calculator = SpatialCalculator(self.image_width, self.image_height)
-        self.gimbal = Gimbal(self.image_width, self.image_height, self.spatial_calculator.HFOV, self.spatial_calculator.VFOV)
 
         # Supervision components
         self.tracker = sv.ByteTrack()
@@ -35,9 +34,11 @@ class Main:
         last_valid_depth_value = 0
 
         rclpy.init(args=None)
+        self.gimbal = Gimbal(self.image_width, self.image_height, self.spatial_calculator.HFOV, self.spatial_calculator.VFOV)
         gimbal_subscriber = GimbalOrientationSubscriber(self.gimbal)
         executor = rclpy.executors.MultiThreadedExecutor()
         executor.add_node(gimbal_subscriber)
+        executor.add_node(self.gimbal)
 
         try:
             while rclpy.ok():
@@ -109,6 +110,9 @@ class Main:
                     print(f"{object_str} has coordinates x = {target_pos_x:.2f}m, y = {target_pos_y:.2f}m relative to the map")
                     print(f"Angle of target relative to camera: yaw = {yaw_adjustment:.2f} radians, pitch = {pitch_adjustment:.2f} radians")
                     print(f"Gimbal aims at: yaw = {yaw_adjustment + yaw_offset:.2f} radians, pitch = {pitch_adjustment + pitch_offset:.2f} radians")
+
+                    current_pitch, current_yaw = self.gimbal.get_gimbal_orientation()
+                    self.gimbal.publish_orientation(current_pitch + pitch_offset + pitch_adjustment, current_yaw + yaw_offset + yaw_adjustment)
 
                 cv2.imshow('Object Detection', annotated_frame)
                 if cv2.waitKey(1) & 0xFF == ord('q'):

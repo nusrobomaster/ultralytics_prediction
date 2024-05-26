@@ -9,7 +9,7 @@ import math
 class GimbalPublisher(Node):
     def __init__(self):
         super().__init__('gimbal_publisher')
-        self.publisher_ = self.create_publisher(Float32MultiArray, 'gimbal_angles', 10)
+        self.publisher_ = self.create_publisher(Float32MultiArray, 'gimbal_current_orientation', 10)
         self.timer = self.create_timer(5.0, self.publish_gimbal_angles)
         self.get_logger().info('Gimbal Publisher Node has been started.')
 

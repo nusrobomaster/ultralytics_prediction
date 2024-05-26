@@ -2,8 +2,10 @@ from rclpy.node import Node
 from std_msgs.msg import Float32MultiArray
 
 
-class Gimbal:
+class Gimbal(Node):
     def __init__(self, image_width, image_height, HFOV, VFOV):
+        super().__init__('gimbal_node')
+        self.publisher = self.create_publisher(Float32MultiArray, 'new_gimbal_orientation', 10)
         self.image_width = image_width
         self.image_height = image_height
         self.HFOV = HFOV
@@ -33,7 +35,16 @@ class Gimbal:
     def update_orientation(self, pitch, yaw):
         self.pitch = pitch
         self.yaw = yaw
-        print(f'Updated Gimbal Orientation: Pitch={pitch}, Yaw={yaw}')
+        # print(f'Updated Gimbal Orientation: Pitch={pitch}, Yaw={yaw}')
+    
+    def publish_orientation(self, new_pitch, new_yaw):
+        msg = Float32MultiArray()
+        msg.data = [new_pitch, new_yaw]
+        self.publisher.publish(msg)
+        self.get_logger().info(f'Published Gimbal Orientation: Pitch={new_pitch}, Yaw={new_yaw}')
+
+    def get_gimbal_orientation(self):
+        return self.pitch, self.yaw
         
         
 class GimbalOrientationSubscriber(Node):
@@ -41,7 +52,7 @@ class GimbalOrientationSubscriber(Node):
         super().__init__('gimbal_orientation_subscriber')
         self.subscription = self.create_subscription(
             Float32MultiArray,
-            'gimbal_angles',
+            'gimbal_current_orientation',
             self.orientation_callback,
             10)
         self.subscription  # prevent unused variable warning

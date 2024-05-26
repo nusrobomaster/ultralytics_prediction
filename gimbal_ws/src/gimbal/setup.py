@@ -20,7 +20,8 @@ setup(
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
-            'dummy_gimbal_orientation_publisher = gimbal.dummy_gimbal_orientation_publisher:main'
+            'dummy_gimbal_orientation_publisher = gimbal.dummy_gimbal_orientation_publisher:main',
+            'main = gimbal.main:main'
         ],
     },
 )

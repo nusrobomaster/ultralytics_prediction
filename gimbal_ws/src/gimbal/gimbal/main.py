@@ -4,7 +4,7 @@ import cv2
 import supervision as sv
 from spatial_calculator import SpatialCalculator
 from camera import Camera
-from gimbal import Gimbal, GimbalOrientationSubscriber
+from gimbal_handler import Gimbal, GimbalOrientationSubscriber
 from object_detector import ObjectDetector
 import rclpy
 
@@ -41,7 +41,7 @@ class Main:
 
         try:
             while rclpy.ok():
-                rclpy.spin_once(gimbal_subscriber, timeout_sec=0.1)
+                rclpy.spin_once(gimbal_subscriber, timeout_sec=0.05)
                 depth_image, color_image = self.camera.get_frames()
                 if depth_image is None or color_image is None:
                     continue

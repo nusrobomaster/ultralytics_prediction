@@ -1,9 +1,5 @@
-#!/usr/bin/env python3
-
-import rclpy
 from rclpy.node import Node
 from std_msgs.msg import Float32MultiArray
-from dummy_gimbal_orientation_publisher import GimbalPublisher
 
 
 class Gimbal:

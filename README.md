@@ -1,5 +1,20 @@
 # Object tracking using Yolov8n and Supervision
-## Run the code:
+
+## Run the code using ROS2:
+```
+// in 1 terminal
+cd gimbal_ws
+colcon build --packages-select gimbal
+source install/setup.bash
+ros2 run gimbal dummy_gimbal_orientation_publisher (replace with actual publisher node)
+
+// in another terminal
+source install/setup.bash
+export PYTHONPATH=$PYTHONPATH:{full_path_to_repo}/ultralytics_prediction/gimbal_ws/src/gimbal/gimbal
+ros2 run gimbal main
+```
+
+## Run the code using python3: (for testing without ROS2)
 ```
 cd armour_plate_tracker
 python3 main.py

@@ -6,6 +6,7 @@ from spatial_calculator import SpatialCalculator
 from camera import Camera
 from gimbal_handler import Gimbal
 from object_detector import ObjectDetector
+from detection_processor import DetectionProcessor
 import rclpy
 
 class Main:
@@ -37,6 +38,8 @@ class Main:
         self.gimbal = Gimbal(self.image_width, self.image_height, self.spatial_calculator.HFOV, self.spatial_calculator.VFOV)
         executor = rclpy.executors.MultiThreadedExecutor()
         executor.add_node(self.gimbal)
+
+        self.front_detection_processor = DetectionProcessor(self.gimbal, self.spatial_calculator)
 
         try:
             while rclpy.ok():

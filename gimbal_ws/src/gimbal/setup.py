@@ -21,6 +21,7 @@ setup(
     entry_points={
         'console_scripts': [
             'dummy_gimbal_orientation_publisher = gimbal.dummy_gimbal_orientation_publisher:main',
+            'yolov8_publisher = gimbal.dummy_yolov8_publisher:main',
             'main = gimbal.main:main'
         ],
     },

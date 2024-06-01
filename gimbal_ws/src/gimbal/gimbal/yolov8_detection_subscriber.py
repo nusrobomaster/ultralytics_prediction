@@ -18,6 +18,7 @@ class Yolov8DetectionSubscriber(Node):
     def listener_callback(self, msg):
         self.results = self.convert_detections(msg)
         self.get_logger().info(f'Received {len(self.results.cls)} detections')
+        # feed results into the supervision prediction .from_ultralytics(results)
 
     def convert_detections(self, msg):
         boxes = []

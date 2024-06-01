@@ -43,7 +43,7 @@ class DummyYOLOv8DetectionPublisher(Node):
             detections_msg.detections.append(detection)
 
         self.publisher_.publish(detections_msg)
-        # self.get_logger().info(detections_msg)
+        self.get_logger().info('Identified %d armour plates' % len(detections_msg.detections))
 
     def create_header(self):
         header = Header()

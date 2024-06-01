@@ -4,7 +4,7 @@ import cv2
 import supervision as sv
 from spatial_calculator import SpatialCalculator
 from camera import Camera
-from gimbal_handler import Gimbal, GimbalOrientationSubscriber
+from gimbal_handler import Gimbal
 from object_detector import ObjectDetector
 import rclpy
 
@@ -18,7 +18,7 @@ class Main:
         
         # Objects
         self.camera = Camera(self.image_width, self.image_height)
-        self.object_detector = ObjectDetector("yolov8n.pt")
+        self.object_detector = ObjectDetector("yolov8n_010624_7.pt")
         self.spatial_calculator = SpatialCalculator(self.image_width, self.image_height)
 
         # Supervision components
@@ -35,14 +35,11 @@ class Main:
 
         rclpy.init(args=None)
         self.gimbal = Gimbal(self.image_width, self.image_height, self.spatial_calculator.HFOV, self.spatial_calculator.VFOV)
-        gimbal_subscriber = GimbalOrientationSubscriber(self.gimbal)
         executor = rclpy.executors.MultiThreadedExecutor()
-        executor.add_node(gimbal_subscriber)
         executor.add_node(self.gimbal)
 
         try:
             while rclpy.ok():
-                rclpy.spin_once(gimbal_subscriber, timeout_sec=0.05)
                 depth_image, color_image = self.camera.get_frames()
                 if depth_image is None or color_image is None:
                     continue
@@ -111,8 +108,7 @@ class Main:
                     print(f"Angle of target relative to camera: yaw = {yaw_adjustment:.2f} radians, pitch = {pitch_adjustment:.2f} radians")
                     print(f"Gimbal aims at: yaw = {yaw_adjustment + yaw_offset:.2f} radians, pitch = {pitch_adjustment + pitch_offset:.2f} radians")
 
-                    current_pitch, current_yaw = self.gimbal.get_gimbal_orientation()
-                    self.gimbal.publish_orientation(current_pitch + pitch_offset + pitch_adjustment, current_yaw + yaw_offset + yaw_adjustment)
+                    self.gimbal.publish_orientation(pitch_offset + pitch_adjustment, yaw_offset + yaw_adjustment)
 
                 cv2.imshow('Object Detection', annotated_frame)
                 if cv2.waitKey(1) & 0xFF == ord('q'):
@@ -120,7 +116,6 @@ class Main:
                 
         finally:
             self.camera.stop()
-            gimbal_subscriber.destroy_node()
             rclpy.shutdown()
             end = time.time()
             elapsed = end - start

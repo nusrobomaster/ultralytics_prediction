@@ -1,9 +1,8 @@
 from rclpy.node import Node
 from vision_msgs.msg import Detection2DArray
-from ultralytics.engine.results import Results, Boxes
+from ultralytics.engine.results import Results 
 import numpy as np
 import rclpy
-import torch
 
 class_names = {
     0: "blue-base",
@@ -27,13 +26,13 @@ class Yolov8DetectionSubscriber(Node):
             self.listener_callback,
             10)
         self.subscription  # prevent unused variable warning
-        self.results = None
+        self.yolov8_results = None
         
         self.image_width = 640
         self.image_height = 480
 
     def listener_callback(self, msg):
-        self.results = self.convert_detections_format_for_supervision(msg)
+        self.yolov8_results = self.convert_detections_format_for_supervision(msg)
 
     def convert_detections_format_for_supervision(self, msg):
         boxes = []
@@ -74,7 +73,7 @@ class Yolov8DetectionSubscriber(Node):
         return results
 
     def get_results(self):
-        return self.results
+        return self.yolov8_results
 
 def main(args=None):
     rclpy.init(args=args)

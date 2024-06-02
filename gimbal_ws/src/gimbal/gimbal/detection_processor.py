@@ -1,5 +1,4 @@
 from rclpy.node import Node
-from vision_msgs.msg import Detection2DArray
 from ultralytics.engine.results import Results
 import supervision as sv
 import numpy as np
@@ -14,14 +13,6 @@ import cv2
 class DetectionProcessor(Node):
     def __init__(self, gimbal, spatial_calculator):
         super().__init__('detection_processor')
-        self.yolov8_subscription = self.create_subscription(
-            Detection2DArray,
-            'detections_output',
-            self.listener_callback,
-            10)
-        self.yolov8_subscription  # prevent unused variable warning
-        self.results = None
-        
         self.target_information_publisher = self.create_publisher(Float32MultiArray, 'target_information', 10)
         self.timer = self.create_timer(0.05, self.publish_target_information)
         self.get_logger().info('Gimbal Publisher Node has been started.')
@@ -35,17 +26,17 @@ class DetectionProcessor(Node):
         self.gimbal = gimbal
         self.spatial_calculator = spatial_calculator
 
-    def listener_callback(self, msg):
-        self.results = self.convert_detections_format_for_supervision(msg)
-        self.get_logger().info(f'Received {len(self.results.cls)} detections')
-        
+        self.supervision_results = None
+
     def publish_target_information(self):
-        if self.results:
+        if self.supervision_results:
             detections = self.process_supervision(self.results)
             annotated_frame = self.annotate_frames(detections, self.results, self.results.orig_img)
             # Target information is [euclidean_distance, yaw_adjustment + yaw_offset, pitch_adjustment + pitch_offset]
             target_information = self.get_target_information(detections, annotated_frame)
             self.target_information_publisher.publish(target_information)
+        else:
+            self.get_logger().info('No detections received yet')
     
     def process_supervision(self, results):
         detections = sv.Detections.from_ultralytics(results)
@@ -121,6 +112,7 @@ class DetectionProcessor(Node):
         #     break
 
     def convert_detections_format_for_supervision(self, msg):
+        self.get_logger().info('Attempting to convert detections to Supervision format')
         boxes = []
         confidences = []
         class_ids = []
@@ -151,3 +143,6 @@ class DetectionProcessor(Node):
         )
         
         return results
+
+    def update_supervision_results(self, results):
+        self.supervision_results = results

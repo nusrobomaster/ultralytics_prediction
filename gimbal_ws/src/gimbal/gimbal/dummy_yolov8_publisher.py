@@ -59,6 +59,7 @@ def main(args=None):
     rclpy.init(args=args)
     node = DummyYOLOv8DetectionPublisher()
     rclpy.spin(node)
+    node.camera.stop()
     node.destroy_node()
     rclpy.shutdown()
 

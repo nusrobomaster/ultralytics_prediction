@@ -5,6 +5,7 @@ import numpy as np
 import rclpy
 from sensor_msgs.msg import Image
 from cv_bridge import CvBridge
+import torch
 
 class_names = {
     0: "blue-base",
@@ -74,19 +75,21 @@ class Yolov8DetectionSubscriber(Node):
             boxes.append([x_min, y_min, x_max, y_max, confidence, class_id])
 
         if not boxes:
-            self.get_logger().info('No valid detections to process')
+            # self.get_logger().info('No valid detections to process')
             return None  
 
         boxes = np.array(boxes, dtype=np.float32)
-        self.get_logger().info(f'Boxes: {boxes}')
+        boxes_tensor = torch.from_numpy(boxes).to(torch.device('cuda'))
+        # self.get_logger().info(f'Boxes: {boxes_tensor}')
 
         try:
             results = Results(
                 orig_img=np.zeros((self.image_height, self.image_width, 3), dtype=np.uint8),
                 path='',
                 names=class_names,
-                boxes=boxes,
+                boxes=boxes_tensor,
             )
+            # print(results.boxes.cls)
         except Exception as e:
             self.get_logger().error(f'Error creating Results object: {e}')
             return None

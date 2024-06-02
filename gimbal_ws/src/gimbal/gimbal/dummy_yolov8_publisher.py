@@ -50,7 +50,7 @@ class DummyYOLOv8DetectionPublisher(Node):
             detections_msg.detections.append(detection)
 
         self.detection_publisher.publish(detections_msg)
-        self.image_publisher.publish(self.bridge.cv2_to_imgmsg(color_image, "bgr8"))
+        self.image_publisher.publish(self.bridge.cv2_to_imgmsg(color_image, encoding="bgr8"))
         self.depth_publisher.publish(self.bridge.cv2_to_imgmsg(depth_image, encoding="16UC1"))
 
         self.get_logger().info('Identified %d armour plates' % len(detections_msg.detections))

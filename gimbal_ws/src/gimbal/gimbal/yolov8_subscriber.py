@@ -3,6 +3,9 @@ from vision_msgs.msg import Detection2DArray
 from ultralytics.engine.results import Results 
 import numpy as np
 import rclpy
+import cv2
+from sensor_msgs.msg import Image
+from cv_bridge import CvBridge
 
 class_names = {
     0: "blue-base",
@@ -20,18 +23,35 @@ class_names = {
 class Yolov8DetectionSubscriber(Node):
     def __init__(self):
         super().__init__('detection_subscriber')
-        self.subscription = self.create_subscription(
+        self.bridge = CvBridge()
+        
+        self.detections_subscription = self.create_subscription(
             Detection2DArray,
             'detections_output',
-            self.listener_callback,
+            self.detections_subscription_callback,
             10)
-        self.subscription  # prevent unused variable warning
+        self.detections_subscription  # prevent unused variable warning
+
+        self.image_subscription = self.create_subscription(
+            Image,
+            'rgb_footage',
+            self.image_subscription_callback,
+            10)
+        self.image_subscription  # prevent unused variable warning
+
+        self.depth_subscription = self.create_subscription(
+            Image,
+            'depth_map',
+            self.depth_subscription_callback,
+            10)
+        self.depth_subscription  # prevent unused variable warning
+
         self.yolov8_results = None
         
         self.image_width = 640
         self.image_height = 480
 
-    def listener_callback(self, msg):
+    def detections_subscription_callback(self, msg):
         self.yolov8_results = self.convert_detections_format_for_supervision(msg)
 
     def convert_detections_format_for_supervision(self, msg):
@@ -71,6 +91,14 @@ class Yolov8DetectionSubscriber(Node):
             return None
 
         return results
+
+    def image_subscription_callback(self, msg):
+        self.image = self.bridge.imgmsg_to_cv2(msg, desired_encoding="bgr8")
+        # print(self.image)
+        
+    def depth_subscription_callback(self, msg):
+        self.depth_image = self.bridge.imgmsg_to_cv2(msg, desired_encoding="16UC1")
+        # print(self.depth_image)
 
     def get_results(self):
         return self.yolov8_results

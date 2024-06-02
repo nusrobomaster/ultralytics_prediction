@@ -15,6 +15,7 @@ class DummyYOLOv8DetectionPublisher(Node):
 
         self.detection_publisher = self.create_publisher(Detection2DArray, 'detections_output', 10)
         self.image_publisher = self.create_publisher(Image, 'rgb_footage', 10)        
+        self.depth_publisher = self.create_publisher(Image, 'depth_map', 10)        
         self.timer = self.create_timer(0.05, self.timer_callback)
 
         self.object_detector = ObjectDetector('yolov8n.pt')
@@ -24,7 +25,7 @@ class DummyYOLOv8DetectionPublisher(Node):
         depth_image, color_image = self.camera.get_frames()
         if depth_image is None or color_image is None:
             return
-        
+
         # Get YOLOv8 results
         results = self.object_detector.detect_objects(color_image)
 
@@ -34,7 +35,7 @@ class DummyYOLOv8DetectionPublisher(Node):
 
         for box in results.boxes:
             detection = Detection2D()
-            center_x, center_y, width, height = box.xywh[0] # Access the bounding box coordinates
+            center_x, center_y, width, height = box.xywh[0] 
 
             detection.bbox.center.position.x = float(center_x)
             detection.bbox.center.position.y = float(center_y)
@@ -42,14 +43,15 @@ class DummyYOLOv8DetectionPublisher(Node):
             detection.bbox.size_y = float(height)
             
             hypothesis = ObjectHypothesisWithPose()
-            hypothesis.hypothesis.class_id = str(int(box.cls[0].item()))  # Class ID
-            hypothesis.hypothesis.score = float(box.conf[0].item())  # Confidence score
+            hypothesis.hypothesis.class_id = str(int(box.cls[0].item())) 
+            hypothesis.hypothesis.score = float(box.conf[0].item())
             detection.results.append(hypothesis)
 
             detections_msg.detections.append(detection)
 
         self.detection_publisher.publish(detections_msg)
         self.image_publisher.publish(self.bridge.cv2_to_imgmsg(color_image, "bgr8"))
+        self.depth_publisher.publish(self.bridge.cv2_to_imgmsg(depth_image, encoding="16UC1"))
 
         self.get_logger().info('Identified %d armour plates' % len(detections_msg.detections))
 

@@ -3,7 +3,6 @@ from vision_msgs.msg import Detection2DArray
 from ultralytics.engine.results import Results 
 import numpy as np
 import rclpy
-import cv2
 from sensor_msgs.msg import Image
 from cv_bridge import CvBridge
 
@@ -50,6 +49,8 @@ class Yolov8DetectionSubscriber(Node):
         
         self.image_width = 640
         self.image_height = 480
+        
+        self.color_image, self.depth_map = None, None
 
     def detections_subscription_callback(self, msg):
         self.yolov8_results = self.convert_detections_format_for_supervision(msg)
@@ -93,15 +94,21 @@ class Yolov8DetectionSubscriber(Node):
         return results
 
     def image_subscription_callback(self, msg):
-        self.image = self.bridge.imgmsg_to_cv2(msg, desired_encoding="bgr8")
-        # print(self.image)
+        self.color_image = self.bridge.imgmsg_to_cv2(msg, desired_encoding="bgr8")
+        # print(self.color_image)
         
     def depth_subscription_callback(self, msg):
-        self.depth_image = self.bridge.imgmsg_to_cv2(msg, desired_encoding="16UC1")
+        self.depth_map = self.bridge.imgmsg_to_cv2(msg, desired_encoding="16UC1")
         # print(self.depth_image)
 
-    def get_results(self):
+    def get_detection_results(self):
         return self.yolov8_results
+
+    def get_color_image(self):
+        return self.color_image
+            
+    def get_depth_map(self):
+        return self.depth_map
 
 def main(args=None):
     rclpy.init(args=args)

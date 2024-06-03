@@ -30,6 +30,7 @@ class Main(Node):
         while rclpy.ok():
             rclpy.spin_once(front_camera_detection_processor, timeout_sec=0.02)
             # rclpy.spin_once(back_camera_detection_processor, timeout_sec=0.02)
+            # rclpy.spin_once(state_machine, timeout_sec=0.02)
 
             # visualise detection results
             if front_camera_detection_processor.get_annotated_frame() is not None:

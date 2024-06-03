@@ -1,4 +1,3 @@
-import numpy as np
 from spatial_calculator import SpatialCalculator
 from gimbal_handler import Gimbal
 from detection_processor import DetectionProcessor

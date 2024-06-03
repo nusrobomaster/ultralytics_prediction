@@ -5,7 +5,6 @@ from std_msgs.msg import Float32MultiArray
 import cv2
 from yolov8_subscriber import Yolov8DetectionSubscriber
 import rclpy
-import torch
 
 # Perform object tracking using supervision library
 # Determine the euclidean distance of the detected objects from the camera
@@ -132,8 +131,5 @@ class DetectionProcessor(Node):
 
     def get_annotated_frame(self):
         if self.annotated_frame is not None:
-            print('Annotated frame exists')
             return self.annotated_frame
-
-        print('Annotated frame does not exist, returning color image')
         return self.color_image

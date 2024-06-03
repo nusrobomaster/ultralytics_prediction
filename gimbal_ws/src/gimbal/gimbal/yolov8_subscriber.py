@@ -103,7 +103,6 @@ class Yolov8DetectionSubscriber(Node):
         # print(self.depth_map)
 
     def convert_image(self, img_msg):
-        # Convert ROS Image message to OpenCV image
         try:
             cv_image = self.bridge.imgmsg_to_cv2(img_msg, desired_encoding="passthrough")
             return cv_image

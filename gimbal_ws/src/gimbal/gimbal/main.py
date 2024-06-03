@@ -1,6 +1,7 @@
 from spatial_calculator import SpatialCalculator
 from gimbal_handler import Gimbal
 from detection_processor import DetectionProcessor
+from fsm import FSM
 import rclpy
 from rclpy.node import Node
 import cv2
@@ -17,12 +18,14 @@ class Main(Node):
         # detection process objects for front and back cameras
         front_camera_detection_processor = DetectionProcessor(gimbal, spatial_calculator, 'front_camera')
         # back_camera_detection_processor = DetectionProcessor(gimbal, spatial_calculator, 'back_camera')
+        # state_machine = FSM('front_camera', 'back_camera') 
         
         # running rosnodes using multithreading
         executor = rclpy.executors.MultiThreadedExecutor()
         executor.add_node(gimbal)
         executor.add_node(front_camera_detection_processor)
         # executor.add_node(back_camera_detection_processor)
+        # executor.add_node(state_machine)
 
         while rclpy.ok():
             rclpy.spin_once(front_camera_detection_processor, timeout_sec=0.02)

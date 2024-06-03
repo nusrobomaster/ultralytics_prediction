@@ -4,7 +4,7 @@ from ultralytics.engine.results import Results
 import numpy as np
 import rclpy
 from sensor_msgs.msg import Image
-from cv_bridge import CvBridge
+from cv_bridge import CvBridge, CvBridgeError
 import torch
 
 class_names = {
@@ -46,12 +46,10 @@ class Yolov8DetectionSubscriber(Node):
             10)
         self.depth_subscription  # prevent unused variable warning
 
-        self.yolov8_results = None
-        
         self.image_width = 640
         self.image_height = 480
         
-        self.color_image, self.depth_map = None, None
+        self.yolov8_results, self.color_image, self.depth_map = None, None, None
 
     def detections_subscription_callback(self, msg):
         self.yolov8_results = self.convert_detections_format_for_supervision(msg)
@@ -97,12 +95,21 @@ class Yolov8DetectionSubscriber(Node):
         return results
 
     def image_subscription_callback(self, msg):
-        self.color_image = self.bridge.imgmsg_to_cv2(msg, desired_encoding="bgr8")
+        self.color_image = self.convert_image(msg)
         # print(self.color_image)
         
     def depth_subscription_callback(self, msg):
-        self.depth_map = self.bridge.imgmsg_to_cv2(msg, desired_encoding="16UC1")
-        # print(self.depth_image)
+        self.depth_map = self.convert_image(msg)
+        # print(self.depth_map)
+
+    def convert_image(self, img_msg):
+        # Convert ROS Image message to OpenCV image
+        try:
+            cv_image = self.bridge.imgmsg_to_cv2(img_msg, desired_encoding="passthrough")
+            return cv_image
+        except CvBridgeError as e:
+            self.get_logger().error(f"Failed to convert image: {e}")
+            return None
 
     def get_detection_results(self):
         return self.yolov8_results

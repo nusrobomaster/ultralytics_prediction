@@ -30,6 +30,8 @@ class DetectionProcessor(Node):
         self.yolov8_detector = Yolov8DetectionSubscriber()
         self.yolov8_results, self.color_image, self.depth_map = None, None, None
         self.target_information = Float32MultiArray()
+        self.annotated_frame = None
+        self.supervision_detections = None
 
         self.conf_threshold = 0.5
         self.camera_coords = np.array([0, 0, 0], dtype=np.float32)
@@ -41,21 +43,28 @@ class DetectionProcessor(Node):
         self.color_image = self.yolov8_detector.get_color_image()
         self.depth_map = self.yolov8_detector.get_depth_map()
 
+        self.annotated_frame = None # reset the annotated frame for visualisation purposes
         if self.yolov8_results and self.color_image is not None and self.depth_map is not None:
-            detections = self.process_supervision()
-            annotated_frame = self.annotate_frames(detections)
+            self.supervision_detections = self.process_supervision()
+            self.annotated_frame = self.annotate_frames(self.supervision_detections)
             # Target information is [euclidean_distance, yaw_adjustment + yaw_offset, pitch_adjustment + pitch_offset]
-
-            data = self.get_target_information_data(detections, annotated_frame)
+            data = self.get_target_information_data(self.supervision_detections)
             if all(value is not None for value in data):
                 self.target_information.data = data
             
             self.target_information_publisher.publish(self.target_information)
+        else:
+            if self.color_image is None:
+                print('Color image is None')
+            if self.depth_map is None:
+                print('Depth map is None')
+            if self.yolov8_results is None:
+                print('Yolov8 results is None')
     
     def process_supervision(self):
-        detections = sv.Detections.from_ultralytics(self.yolov8_results)
-        detections = self.tracker.update_with_detections(detections)
-        return detections
+        supervision_detections = sv.Detections.from_ultralytics(self.yolov8_results)
+        supervision_detections = self.tracker.update_with_detections(supervision_detections)
+        return supervision_detections
 
     def annotate_frames(self, detections):
         annotated_frame = self.box_annotator.annotate(self.color_image.copy(), detections=detections)
@@ -69,7 +78,7 @@ class DetectionProcessor(Node):
         
         return annotated_frame
     
-    def get_target_information_data(self, detections, annotated_frame):
+    def get_target_information_data(self, detections):
         detection_information, detection_distance_info = [], []
         last_valid_depth_value = 0
         for i in range(len(detections.xyxy)):
@@ -86,7 +95,7 @@ class DetectionProcessor(Node):
                     tracker_id = detections.tracker_id[i]
                     direction = self.spatial_calculator.determine_direction_of_movement(tracker_id, current_position)
                     yaw_offset, pitch_offset = self.gimbal.calculate_gimbal_offsets(direction)
-                    cv2.putText(annotated_frame, direction, (xmin, ymin - 20), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (36, 255, 12), 2)
+                    cv2.putText(self.annotated_frame, direction, (xmin, ymin - 20), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (36, 255, 12), 2)
 
                 centroid_x, centroid_y, depth_value = self.spatial_calculator.spatial_location_calculator.calc_location_relative_to_camera((xmin, ymin, xmax, ymax), self.depth_map)
                 distance_from_camera = self.spatial_calculator.spatial_location_calculator.calc_distance_from_camera(centroid_x, centroid_y, last_valid_depth_value)
@@ -121,6 +130,10 @@ class DetectionProcessor(Node):
             return [euclidean_dist, yaw_relative_to_gimbal, pitch_relative_to_gimbal]
         return [None, None, None]
 
-        # cv2.imshow('Object Detection', annotated_frame)
-        # if cv2.waitKey(1) & 0xFF == ord('q'):
-        #     break
+    def get_annotated_frame(self):
+        if self.annotated_frame is not None:
+            print('Annotated frame exists')
+            return self.annotated_frame
+
+        print('Annotated frame does not exist, returning color image')
+        return self.color_image

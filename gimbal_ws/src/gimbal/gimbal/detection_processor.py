@@ -125,7 +125,6 @@ class DetectionProcessor(Node):
             print(f"Angle of target relative to camera: yaw = {yaw_adjustment:.2f} radians, pitch = {pitch_adjustment:.2f} radians")
             print(f"Gimbal aims at: yaw = {yaw_relative_to_gimbal:.2f} radians, pitch = {pitch_relative_to_gimbal:.2f} radians")
 
-            # self.gimbal.publish_orientation(pitch_offset + pitch_adjustment, yaw_offset + yaw_adjustment)
             return [euclidean_dist, yaw_relative_to_gimbal, pitch_relative_to_gimbal]
         return [None, None, None]
 

@@ -6,4 +6,4 @@ class ObjectDetector:
         self.conf_threshold = conf_threshold
 
     def detect_objects(self, image):
-        return self.model(image, verbose=False, classes=67)[0]
+        return self.model(image, verbose=False)[0]

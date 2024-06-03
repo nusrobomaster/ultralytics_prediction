@@ -6,6 +6,8 @@ from spatial_location_calculator import SpatialLocationCalculator
 class SpatialCalculator:
     def __init__(self, image_width, image_height):
         self.spatial_location_calculator = SpatialLocationCalculator(image_width, image_height)
+        # self.HFOV = math.radians(69.0)    # HFOV=69 from datasheet
+        # self.VFOV = math.radians(42.0)    # VFOV=42 from datasheet
         self.HFOV = self.spatial_location_calculator.calc_HFOV()
         self.VFOV = self.spatial_location_calculator.calc_VFOV()
         print("Horizontal FOV: ", self.HFOV)

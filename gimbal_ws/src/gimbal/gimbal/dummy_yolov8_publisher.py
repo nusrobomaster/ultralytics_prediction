@@ -16,7 +16,7 @@ class DummyYOLOv8DetectionPublisher(Node):
         self.detection_publisher = self.create_publisher(Detection2DArray, 'detections_output', 10)
         self.image_publisher = self.create_publisher(Image, 'rgb_footage', 10)        
         self.depth_publisher = self.create_publisher(Image, 'depth_map', 10)        
-        self.timer = self.create_timer(0.02, self.timer_callback)
+        self.timer = self.create_timer(0.03, self.timer_callback)
 
         self.object_detector = ObjectDetector('yolov8n_010624_7.pt')
         self.camera = Camera(640, 480)

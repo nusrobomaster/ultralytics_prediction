@@ -9,8 +9,8 @@ from sensor_msgs.msg import Image
 from cv_bridge import CvBridge
 
 class DummyYOLOv8DetectionPublisher(Node):
-    def __init__(self):
-        super().__init__('yolov8_detection_publisher')
+    def __init__(self, namespace):
+        super().__init__('yolov8_detection_publisher', namespace=namespace)
         self.bridge = CvBridge()
 
         self.detection_publisher = self.create_publisher(Detection2DArray, 'detections_output', 10)
@@ -64,7 +64,7 @@ class DummyYOLOv8DetectionPublisher(Node):
     
 def main(args=None):
     rclpy.init(args=args)
-    node = DummyYOLOv8DetectionPublisher()
+    node = DummyYOLOv8DetectionPublisher('front_camera')
     rclpy.spin(node)
     node.camera.stop()
     node.destroy_node()

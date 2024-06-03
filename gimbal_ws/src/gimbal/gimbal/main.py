@@ -15,7 +15,7 @@ class Main(Node):
         gimbal = Gimbal(self.image_width, self.image_height, spatial_calculator.HFOV, spatial_calculator.VFOV)
 
         # detection process objects for front and back cameras
-        front_camera_detection_processor = DetectionProcessor(gimbal, spatial_calculator)
+        front_camera_detection_processor = DetectionProcessor(gimbal, spatial_calculator, 'front_camera')
         
         # running rosnodes using multithreading
         executor = rclpy.executors.MultiThreadedExecutor()

@@ -11,8 +11,8 @@ import rclpy
 # Determine the yaw and pitch adjustments for the gimbal
 # Publishes this as the gimbal orientation to rotate relative to the camera, together with the euclidean distance
 class DetectionProcessor(Node):
-    def __init__(self, gimbal, spatial_calculator):
-        super().__init__('detection_processor')
+    def __init__(self, gimbal, spatial_calculator, namespace):
+        super().__init__('detection_processor', namespace=namespace)
         self.target_information_publisher = self.create_publisher(Float32MultiArray, 'target_information', 10)
         self.timer = self.create_timer(0.02, self.publish_target_information)
         self.get_logger().info('Gimbal Publisher Node has been started.')
@@ -26,7 +26,7 @@ class DetectionProcessor(Node):
         self.gimbal = gimbal
         self.spatial_calculator = spatial_calculator
 
-        self.yolov8_detector = Yolov8DetectionSubscriber()
+        self.yolov8_detector = Yolov8DetectionSubscriber(namespace)
         self.yolov8_results, self.color_image, self.depth_map = None, None, None
         self.target_information = Float32MultiArray()
         self.annotated_frame = None

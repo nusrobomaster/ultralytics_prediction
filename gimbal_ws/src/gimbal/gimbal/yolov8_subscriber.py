@@ -21,8 +21,8 @@ class_names = {
 }
 
 class Yolov8DetectionSubscriber(Node):
-    def __init__(self):
-        super().__init__('detection_subscriber')
+    def __init__(self, namespace):
+        super().__init__('detection_subscriber', namespace=namespace)
         self.bridge = CvBridge()
         
         self.detections_subscription = self.create_subscription(

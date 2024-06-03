@@ -26,6 +26,7 @@ python3 main.py
 - YOLOv8n is used for object detection, supervision library for object tracking
 - There can be multiple bbox detections for different objects, but there will only be 1 target, which is the one with shortest euclidean distance to camera.
 - Logic is in `run()` in class Main in main.py
+- Need to update the rostopic names to match those published by the cameras on the sentry
 
 #### Rostopics
 - /front_camera/rgb_footage
